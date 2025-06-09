@@ -25,13 +25,6 @@
         "handle": "filesystem"
       },
       {
-        "src": "/(order|resume|equipment)/.*",
-        "status": 302,
-        "headers": {
-          "Location": "https://stroyka.kz"
-        }
-      },
-      {
         "src": "/(.*)",
         "dest": "/$1"
       }
