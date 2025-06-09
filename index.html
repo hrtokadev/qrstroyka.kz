@@ -138,6 +138,53 @@
                 padding-bottom: max(1rem, env(safe-area-inset-bottom));
             }
         }
+
+        .deep-link-container {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .deep-link-message {
+            font-size: clamp(1.1rem, 4vw, 1.3rem);
+            margin-bottom: 1.5rem;
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+
+        .open-app-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            background-color: #01875f;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: transform 0.2s, background-color 0.2s;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .open-app-button:active {
+            transform: scale(0.98);
+            background-color: #016b4f;
+        }
+
+        .divider {
+            width: 100%;
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 1.5rem 0;
+        }
     </style>
 </head>
 <body>
@@ -146,7 +193,10 @@
             <img src="./logo.jpeg" alt="Стройка.kz" onerror="this.style.display='none'">
         </div>
         <h1>Stroyka.kz</h1>
-        <p>Скачайте наше приложение для поиска строительных услуг и материалов</p>
+        <div id="deepLinkContent"></div>
+        <div id="defaultContent">
+            <p>Скачайте наше приложение для поиска строительных услуг и материалов</p>
+        </div>
         <div class="store-buttons">
             <a href="https://apps.apple.com/us/app/stroyka-kz/id6742178994" class="store-button app-store">
                 <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -162,5 +212,45 @@
             </a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            const deepLinkContent = document.getElementById('deepLinkContent');
+            const defaultContent = document.getElementById('defaultContent');
+            
+            // Regular expression to match the patterns
+            const pattern = /^\/(order|resume|equipment)\/([^\/]+)$/;
+            const match = path.match(pattern);
+            
+            if (match) {
+                const [, type, regNumber] = match;
+                const typeMap = {
+                    'order': 'заказ',
+                    'resume': 'резюме',
+                    'equipment': 'объявление'
+                };
+                
+                const displayType = typeMap[type] || type;
+                const deepLinkUrl = `stroyka://${type}/${regNumber}`;
+                
+                deepLinkContent.innerHTML = `
+                    <div class="deep-link-container">
+                        <div class="deep-link-message">
+                            Открыть ${displayType} '${regNumber}' в приложении Stroyka.kz
+                        </div>
+                        <button class="open-app-button" onclick="window.location.href='${deepLinkUrl}'">
+                            Открыть в приложении
+                        </button>
+                        <div class="divider"></div>
+                    </div>
+                `;
+                
+                defaultContent.style.display = 'none';
+            } else {
+                deepLinkContent.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html> 
