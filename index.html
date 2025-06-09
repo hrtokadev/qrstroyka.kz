@@ -223,22 +223,31 @@
             const pattern = /^\/(order|resume|equipment)\/([^\/]+)$/;
             const match = path.match(pattern);
             
+            const typeMap = {
+                'order': 'заказ',
+                'resume': 'резюме',
+                'equipment': 'объявление'
+            };
+
+            const typeDescriptionMap = {
+                'order': 'Просмотреть детали заказа',
+                'resume': 'Просмотреть резюме',
+                'equipment': 'Просмотреть объявление об оборудовании'
+            };
+            
             if (match) {
                 const [, type, regNumber] = match;
-                const typeMap = {
-                    'order': 'заказ',
-                    'resume': 'резюме',
-                    'equipment': 'объявление'
-                };
-                
                 const displayType = typeMap[type] || type;
                 const deepLinkUrl = `stroyka://${type}/${regNumber}`;
                 
                 deepLinkContent.innerHTML = `
                     <div class="deep-link-container">
                         <div class="deep-link-message">
-                            Открыть ${displayType} '${regNumber}' в приложении Stroyka.kz
+                            ${typeDescriptionMap[type]} '${regNumber}'
                         </div>
+                        <p style="color: #666; margin-bottom: 1.5rem;">
+                            Для просмотра полной информации, откройте ${displayType} в приложении Stroyka.kz
+                        </p>
                         <button class="open-app-button" onclick="window.location.href='${deepLinkUrl}'">
                             Открыть в приложении
                         </button>

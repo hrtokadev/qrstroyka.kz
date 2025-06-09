@@ -22,6 +22,18 @@
         "dest": "/.well-known/assetlinks.json"
       },
       {
+        "src": "/order/.*",
+        "dest": "/index.html"
+      },
+      {
+        "src": "/resume/.*",
+        "dest": "/index.html"
+      },
+      {
+        "src": "/equipment/.*",
+        "dest": "/index.html"
+      },
+      {
         "handle": "filesystem"
       },
       {
