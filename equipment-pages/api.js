@@ -3,7 +3,7 @@
  * Handles all API calls for machinery and equipment operations
  */
 
-const API_BASE_URL = 'https://dictionary.test.api.stroyka.kz/api/v1';
+const API_BASE_URL = 'https://dictionary.api.stroyka.kz/api/v1';
 const CMR_API_BASE_URL = 'https://cmr.api.stroyka.kz';
 
 class ApiService {
@@ -183,7 +183,7 @@ class ApiService {
      * Get condition types
      */
     async getConditionTypes(language = 'kk') {
-        const url = `https://dictionary.test.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=CONDITION`;
+        const url = `https://dictionary.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=CONDITION`;
         return await this.makeRequest(url);
     }
 
@@ -191,7 +191,7 @@ class ApiService {
      * Get engine types
      */
     async getEngineTypes(language = 'kk') {
-        const url = `https://dictionary.test.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=ENGINE_TYPE`;
+        const url = `https://dictionary.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=ENGINE_TYPE`;
         return await this.makeRequest(url);
     }
 
@@ -199,7 +199,7 @@ class ApiService {
      * Get steering types
      */
     async getSteeringTypes(language = 'kk') {
-        const url = `https://dictionary.test.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=STEERING`;
+        const url = `https://dictionary.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=STEERING`;
         return await this.makeRequest(url);
     }
 
@@ -207,7 +207,7 @@ class ApiService {
      * Get rental periods
      */
     async getRentalPeriods(language = 'kk') {
-        const url = `https://dictionary.test.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=RENTAL_PERIOD`;
+        const url = `https://dictionary.api.stroyka.kz/api/v1/dictionary/simple/code?dictionaryName=RENTAL_PERIOD`;
         return await this.makeRequest(url);
     }
 
@@ -229,7 +229,7 @@ class ApiService {
      * Get addresses (regions, districts, cities)
      */
     async getAddresses(language = 'kk') {
-        const url = `https://dictionary.test.api.stroyka.kz/api/v1/dictionary/kato?katoType=REGION`;
+        const url = `https://dictionary.api.stroyka.kz/api/v1/dictionary/kato?katoType=REGION`;
         return await this.makeRequest(url);
     }
 
