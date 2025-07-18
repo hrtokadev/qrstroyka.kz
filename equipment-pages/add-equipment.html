@@ -563,10 +563,10 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <button class="back-btn" onclick="goBack()">
+            <!-- <button class="back-btn" onclick="goBack()">
                 <span>←</span>
                 <span data-kk="Артқа" data-ru="Назад">Артқа</span>
-            </button>
+            </button> -->
             <h1 class="header-title" data-kk="Спецтехника қосу" data-ru="Добавить спецтехнику">Спецтехника қосу</h1>
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <div style="display: flex; gap: 0.5rem;">
@@ -728,8 +728,8 @@
             <h2 class="section-title" data-kk="Қызмет құны" data-ru="Стоимость услуг">Қызмет құны</h2>
             
             <div class="form-group">
-                <label class="form-label" data-kk="Сағат үшін сома" data-ru="Сумма за час">Сағат үшін сома</label>
-                <input type="number" class="form-input" id="hourlyRate" placeholder="₸" disabled>
+                <label class="form-label" data-kk="Сағат үшін сома (₸)" data-ru="Сумма за час (₸)">Сағат үшін сома (₸)</label>
+                <input type="number" class="form-input" id="hourlyRate" placeholder="₸">
             </div>
 
             <div class="form-group">
@@ -886,6 +886,11 @@
         <div class="modal-content" style="text-align:center;">
             <h2 style="color:#4CAF50;">✅ <span data-kk="Сәтті жарияланды!" data-ru="Успешно опубликовано!">Сәтті жарияланды!</span></h2>
             <p data-kk="Сіз тағы бір техника қоса аласыз немесе қосымшаны жүктеп, сол арқылы жариялай аласыз." data-ru="Вы можете добавить еще одну технику или скачать приложение и добавить через него.">Сіз тағы бір техника қоса аласыз немесе қосымшаны жүктеп, сол арқылы жариялай аласыз.</p>
+            <div style="margin: 1em 0; color: #333; font-size: 1em;">
+                <span data-kk="Сіз мобильді қосымшада жарияланған техниканың ақпаратын өзгерте аласыз. Қосымшада сіз үшін қызықты болуы мүмкін көптеген функциялар бар!" data-ru="В мобильном приложении вы сможете редактировать информацию о созданной спецтехнике. В приложении также есть множество других функций, которые могут быть вам интересны!">
+                    В мобильном приложении вы сможете редактировать информацию о созданной спецтехнике. В приложении также есть множество других функций, которые могут быть вам интересны!
+                </span>
+            </div>
             <div style="margin-top:2em;display:flex;gap:1em;justify-content:center;flex-wrap:wrap;">
                 <button onclick="addAnotherMachinery()" style="padding:0.7em 1.5em;border:none;border-radius:8px;background:#4CAF50;color:white;font-size:1em;cursor:pointer;">+ <span data-kk="Тағы қосу" data-ru="Добавить еще">Тағы қосу</span></button>
                 <div style="display:flex;gap:0.5em;align-items:center;">
@@ -1673,7 +1678,7 @@
                 driverOperator: document.getElementById('driverOperator').checked,
                 documentPackage: document.getElementById('documentPackage').checked,
                 regionTrips: document.getElementById('regionTrips').checked,
-                hourlyRate: document.getElementById('negotiablePrice').checked ? null : document.getElementById('hourlyRate').value,
+                hourlyRate: document.getElementById('negotiablePrice').checked ? null : (document.getElementById('hourlyRate').value.replace(/\D/g, '') || null),
                 negotiablePrice: document.getElementById('negotiablePrice').checked,
                 address: selectedData.address,
                 phone: userData.phone,
@@ -1705,6 +1710,26 @@
             document.getElementById('successModal').classList.remove('show');
             // Reset the form (reload page for simplicity)
             window.location.reload();
+        }
+
+        // Hourly rate formatting
+        const hourlyRateInput = document.getElementById('hourlyRate');
+        if (hourlyRateInput) {
+            hourlyRateInput.type = 'text'; // allow formatting
+            hourlyRateInput.addEventListener('input', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value) {
+                    this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                } else {
+                    this.value = '';
+                }
+            });
+            hourlyRateInput.addEventListener('blur', function(e) {
+                let value = this.value.replace(/\D/g, '');
+                if (value) {
+                    this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+                }
+            });
         }
     </script>
     <script src="api.js"></script>

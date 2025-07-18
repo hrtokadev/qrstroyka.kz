@@ -40,7 +40,6 @@ class ApiService {
 
             // Handle different response types
             const contentType = response.headers.get('content-type');
-            console.log('Content-Type:', contentType);
             
             // Clone the response so we can read it multiple times if needed
             const responseClone = response.clone();
@@ -48,29 +47,23 @@ class ApiService {
             // Try to parse as JSON first
             try {
                 const data = await response.json();
-                console.log('Response data (JSON):', data);
                 return data;
             } catch (jsonError) {
-                console.log('Failed to parse as JSON, trying as text');
                 
                 // Use the cloned response for text reading
                 try {
                     const text = await responseClone.text();
-                    console.log('Response text:', text);
                     
                     // If it looks like a password/token (alphanumeric with special chars), return as is
                     if (text && text.length > 0 && /^[a-zA-Z0-9@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+$/.test(text)) {
-                        console.log('Returning as password/token text');
                         return text;
                     }
                     
                     // Try to parse as JSON again (sometimes content-type is wrong)
                     try {
                         const parsedData = JSON.parse(text);
-                        console.log('Response data (parsed from text):', parsedData);
                         return parsedData;
                     } catch (parseError) {
-                        console.log('Could not parse as JSON, returning as text');
                         return text;
                     }
                 } catch (textError) {
@@ -277,8 +270,6 @@ class ApiService {
             address: equipmentData.address ? { code: equipmentData.address.code || equipmentData.address.id, name: equipmentData.address.name } : undefined,
             machineryCharacteristics: equipmentData.machineryCharacteristics || []
         };
-
-        console.log(JSON.stringify(payload));
 
         return await this.makeRequest(url, {
             method: 'POST',
