@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Stroyka.kz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .logo-test img {
+            max-width: 100px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Тест исправлений</h1>
+    
+    <div class="test-section">
+        <h2>1. Тест логотипа</h2>
+        <div class="logo-test">
+            <img src="logo.jpeg" alt="Logo" onload="this.nextElementSibling.textContent='✅ Логотип загружен успешно'" onerror="this.nextElementSibling.textContent='❌ Ошибка загрузки логотипа'">
+            <span class="error">Проверка...</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Тест API</h2>
+        <button onclick="testAPI()">Тестировать API</button>
+        <div id="api-result"></div>
+        <div id="api-details" style="margin-top:1em;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Навигация</h2>
+        <a href="machinery.html" class="success">✅ machinery.html</a><br>
+        <a href="add-equipment.html" class="success">✅ add-equipment.html</a>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        const apiService = new ApiService();
+        
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            const detailsDiv = document.getElementById('api-details');
+            resultDiv.innerHTML = 'Тестирование...';
+            detailsDiv.innerHTML = '';
+            let ok = true;
+            let details = [];
+            try {
+                // Категории
+                const categories = await apiService.getCategories();
+                details.push(`<div class='success'>✅ Категории: ${categories.length || (categories.data ? categories.data.length : 0)}</div>`);
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Категории: ${error.message}</div>`);
+            }
+            try {
+                // Подкатегории (если есть категория)
+                let subcategories = [];
+                const categories = await apiService.getCategories();
+                if (categories && categories.length > 0) {
+                    subcategories = await apiService.getSubcategories(categories[0].id);
+                    details.push(`<div class='success'>✅ Подкатегории: ${subcategories.length || (subcategories.data ? subcategories.data.length : 0)}</div>`);
+                } else {
+                    details.push(`<div class='error'>❌ Нет категорий для теста подкатегорий</div>`);
+                }
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Подкатегории: ${error.message}</div>`);
+            }
+            try {
+                // Модели (если есть подкатегория)
+                let models = [];
+                const categories = await apiService.getCategories();
+                if (categories && categories.length > 0) {
+                    const subcategories = await apiService.getSubcategories(categories[0].id);
+                    if (subcategories && subcategories.length > 0) {
+                        models = await apiService.getModels(subcategories[0].id);
+                        details.push(`<div class='success'>✅ Модели: ${models.length || (models.data ? models.data.length : 0)}</div>`);
+                    } else {
+                        details.push(`<div class='error'>❌ Нет подкатегорий для теста моделей</div>`);
+                    }
+                } else {
+                    details.push(`<div class='error'>❌ Нет категорий для теста моделей</div>`);
+                }
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Модели: ${error.message}</div>`);
+            }
+            try {
+                // Типы двигателя
+                const engineTypes = await apiService.getEngineTypes('kk');
+                details.push(`<div class='success'>✅ Типы двигателя: ${(engineTypes.data ? engineTypes.data.length : engineTypes.length)}</div>`);
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Типы двигателя: ${error.message}</div>`);
+            }
+            try {
+                // Типы управления
+                const steeringTypes = await apiService.getSteeringTypes('kk');
+                details.push(`<div class='success'>✅ Типы управления: ${(steeringTypes.data ? steeringTypes.data.length : steeringTypes.length)}</div>`);
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Типы управления: ${error.message}</div>`);
+            }
+            try {
+                // Состояния
+                const conditionTypes = await apiService.getConditionTypes('kk');
+                details.push(`<div class='success'>✅ Состояния: ${(conditionTypes.data ? conditionTypes.data.length : conditionTypes.length)}</div>`);
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Состояния: ${error.message}</div>`);
+            }
+            try {
+                // Периоды аренды
+                const rentalPeriods = await apiService.getRentalPeriods('kk');
+                details.push(`<div class='success'>✅ Периоды аренды: ${(rentalPeriods.data ? rentalPeriods.data.length : rentalPeriods.length)}</div>`);
+            } catch (error) {
+                ok = false;
+                details.push(`<div class='error'>❌ Периоды аренды: ${error.message}</div>`);
+            }
+            // Optionally, test photo upload (requires a real file and auth)
+            // try {
+            //     const fakeFile = new File([new Blob(['test'])], 'test.txt');
+            //     const uploadResult = await apiService.uploadPhotos([{file: fakeFile}]);
+            //     details.push(`<div class='success'>✅ Фото загружено: ${JSON.stringify(uploadResult)}</div>`);
+            // } catch (error) {
+            //     ok = false;
+            //     details.push(`<div class='error'>❌ Фото: ${error.message}</div>`);
+            // }
+            resultDiv.innerHTML = ok ? '<div class="success">✅ Все основные API работают</div>' : '<div class="error">❌ Есть ошибки в API</div>';
+            detailsDiv.innerHTML = details.join('');
+        }
+    </script>
+</body>
+</html> 
