@@ -908,7 +908,7 @@
     </div>
 
     <script>
-        let currentLanguage = 'kk';
+        let currentLanguage = localStorage.getItem('stroyka_lang') || 'kk';
         let userData = null;
         let selectedData = {
             category: null,
@@ -927,6 +927,7 @@
 
         function changeLanguage(lang) {
             currentLanguage = lang;
+            localStorage.setItem('stroyka_lang', lang);
             
             // Update language buttons
             document.getElementById('langKk').style.background = lang === 'kk' ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)';
@@ -986,7 +987,11 @@
             initializeForm();
             setupPhotoUpload();
             
-            // Initialize language
+            // Initialize language from localStorage if present
+            const storedLang = localStorage.getItem('stroyka_lang');
+            if (storedLang) {
+                currentLanguage = storedLang;
+            }
             changeLanguage(currentLanguage);
             updateDropdownStates();
         });
