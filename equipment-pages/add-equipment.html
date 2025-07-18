@@ -1710,6 +1710,12 @@
         }
         function showSuccessModal() {
             document.getElementById('successModal').classList.add('show');
+            // Remove spinner and re-enable submit button
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span data-kk="Жарияны жариялау" data-ru="Опубликовать объявление">Жарияны жариялау</span>';
+            }
         }
         function addAnotherMachinery() {
             document.getElementById('successModal').classList.remove('show');
