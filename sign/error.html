@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stroyka.kz - Ошибка авторизации</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: #f5f7fa;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background-color: #fff;
+            border-radius: 16px;
+            padding: 0.8rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.2;
+            color: #333;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: #f44336;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            color: #c62828;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .description {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .error-details {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+
+        .error-details-title {
+            color: #c62828;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .error-detail-item {
+            color: #d32f2f;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            word-break: break-all;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: transform 0.2s, background-color 0.2s;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e8e8e8;
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 1rem;
+            line-height: 1.4;
+        }
+
+        /* Safe area insets for modern mobile browsers */
+        @supports (padding: max(0px)) {
+            body {
+                padding-left: max(1rem, env(safe-area-inset-left));
+                padding-right: max(1rem, env(safe-area-inset-right));
+                padding-bottom: max(1rem, env(safe-area-inset-bottom));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="../logo.jpeg" alt="Стройка.kз" onerror="this.style.display='none'">
+        </div>
+        <h1>Ошибка авторизации</h1>
+        <div class="error-icon">✕</div>
+        <div class="error-message">Произошла ошибка при авторизации</div>
+        <div class="description">
+            К сожалению, не удалось завершить процесс авторизации. Пожалуйста, попробуйте еще раз или обратитесь в службу поддержки.
+        </div>
+        
+        <div id="errorDetails" class="error-details" style="display: none;">
+            <div class="error-details-title">Детали ошибки:</div>
+            <div id="errorDetailsContent"></div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="retryAuth()">
+                Попробовать снова
+            </button>
+            <button class="btn btn-secondary" onclick="goToMainPage()">
+                Перейти на главную
+            </button>
+            <button class="btn btn-danger" onclick="clearAuthData()">
+                Очистить данные
+            </button>
+        </div>
+
+        <div class="help-text">
+            Если проблема повторяется, попробуйте очистить данные браузера или обратитесь в службу поддержки.
+        </div>
+    </div>
+
+    <script>
+        class ErrorPage {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.displayErrorDetails();
+            }
+
+            displayErrorDetails() {
+                try {
+                    const errorData = sessionStorage.getItem('authError');
+                    if (errorData) {
+                        const error = JSON.parse(errorData);
+                        const errorDetailsContainer = document.getElementById('errorDetails');
+                        const errorDetailsContent = document.getElementById('errorDetailsContent');
+                        
+                        let errorHtml = '';
+                        
+                        if (error.error) {
+                            errorHtml += `<div class="error-detail-item"><strong>Тип ошибки:</strong> ${error.error}</div>`;
+                        }
+                        
+                        if (error.errorDescription) {
+                            errorHtml += `<div class="error-detail-item"><strong>Описание:</strong> ${error.errorDescription}</div>`;
+                        }
+                        
+                        if (error.state) {
+                            errorHtml += `<div class="error-detail-item"><strong>State:</strong> ${error.state}</div>`;
+                        }
+                        
+                        if (error.scope) {
+                            errorHtml += `<div class="error-detail-item"><strong>Scope:</strong> ${error.scope}</div>`;
+                        }
+                        
+                        if (errorHtml) {
+                            errorDetailsContent.innerHTML = errorHtml;
+                            errorDetailsContainer.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error displaying error details:', error);
+                }
+            }
+
+            getErrorMessage(errorType) {
+                const errorMessages = {
+                    'access_denied': 'Доступ запрещен пользователем',
+                    'invalid_request': 'Неверный запрос авторизации',
+                    'invalid_scope': 'Неверный scope',
+                    'server_error': 'Ошибка сервера',
+                    'temporarily_unavailable': 'Сервис временно недоступен',
+                    'unauthorized_client': 'Неавторизованный клиент',
+                    'unsupported_response_type': 'Неподдерживаемый тип ответа'
+                };
+                
+                return errorMessages[errorType] || 'Неизвестная ошибка';
+            }
+        }
+
+        function retryAuth() {
+            // Clear any stored error data
+            sessionStorage.removeItem('authError');
+            
+            // Redirect back to the main page or auth page
+            window.location.href = '/';
+        }
+
+        function goToMainPage() {
+            window.location.href = '/';
+        }
+
+        function clearAuthData() {
+            // Clear all authentication related data
+            localStorage.removeItem('authData');
+            sessionStorage.removeItem('authError');
+            
+            // Show confirmation
+            alert('Данные авторизации очищены');
+            
+            // Redirect to main page
+            window.location.href = '/';
+        }
+
+        // Initialize error page when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ErrorPage();
+        });
+    </script>
+</body>
+</html> 
