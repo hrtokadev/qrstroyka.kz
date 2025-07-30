@@ -57,7 +57,7 @@ The API base URL can be configured in several ways:
 
 4. **Default Configuration** (in `config.js`):
    ```javascript
-   window.API_CONFIG.API_BASE_URL = 'https://adata.test.api.stroyka.kz';
+   window.API_CONFIG.API_BASE_URL = 'http://localhost:8393';
    ```
 
 ### Authentication Response Format
@@ -104,7 +104,7 @@ On authentication errors, users are redirected to `/sign/error` with detailed er
 The callback page calls the following endpoint:
 
 ```
-POST {API_BASE_URL}/api/v1/aitu/callback?code={code}&state={state}
+GET {API_BASE_URL}/api/v1/aitu/callback?code={code}&state={state}
 ```
 
 ## Styling

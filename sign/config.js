@@ -6,7 +6,7 @@
 // API Configuration
 window.API_CONFIG = {
     // API Base URL - can be overridden by environment variables
-    API_BASE_URL: 'https://adata.test.api.stroyka.kz',
+    API_BASE_URL: 'http://localhost:8393',
     
     // Auth endpoints
     AUTH_CALLBACK_ENDPOINT: '/api/v1/aitu/callback',
