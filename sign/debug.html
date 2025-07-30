@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="api-base-url" content="https://adata.test.api.stroyka.kz">
+    <title>Debug - Stroyka.kz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .section h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .info-item {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .warning {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+        }
+
+        .btn-warning:hover {
+            background: #f57c00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Authentication Debug Information</h1>
+
+        <div class="section">
+            <h3>Current URL Parameters</h3>
+            <div id="urlParams"></div>
+        </div>
+
+        <div class="section">
+            <h3>Configuration</h3>
+            <div id="configInfo"></div>
+        </div>
+
+        <div class="section">
+            <h3>Stored Data</h3>
+            <div id="storedData"></div>
+        </div>
+
+        <div class="section">
+            <h3>Actions</h3>
+            <button onclick="clearAllData()">Clear All Data</button>
+            <button onclick="testApiConnection()" class="btn-warning">Test API Connection</button>
+            <button onclick="simulateCallback()" class="btn-warning">Simulate Callback</button>
+            <button onclick="location.reload()">Refresh Page</button>
+        </div>
+
+        <div class="section">
+            <h3>Debug Output</h3>
+            <div id="debugOutput"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        class DebugPage {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.displayUrlParams();
+                this.displayConfigInfo();
+                this.displayStoredData();
+            }
+
+            displayUrlParams() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const container = document.getElementById('urlParams');
+                let html = '';
+
+                if (urlParams.toString() === '') {
+                    html = '<div class="info-item warning">No URL parameters found</div>';
+                } else {
+                    for (const [key, value] of urlParams) {
+                        html += `<div class="info-item"><strong>${key}:</strong> ${value}</div>`;
+                    }
+                }
+
+                container.innerHTML = html;
+            }
+
+            displayConfigInfo() {
+                const container = document.getElementById('configInfo');
+                const apiBaseUrl = getApiBaseUrl();
+                const fullUrl = getApiUrl('/api/v1/aitu/callback');
+
+                container.innerHTML = `
+                    <div class="info-item"><strong>API Base URL:</strong> ${apiBaseUrl}</div>
+                    <div class="info-item"><strong>Full Callback URL:</strong> ${fullUrl}</div>
+                    <div class="info-item"><strong>Current Domain:</strong> ${window.location.origin}</div>
+                    <div class="info-item"><strong>User Agent:</strong> ${navigator.userAgent}</div>
+                `;
+            }
+
+            displayStoredData() {
+                const container = document.getElementById('storedData');
+                let html = '';
+
+                // Check localStorage
+                try {
+                    const authData = localStorage.getItem('authData');
+                    if (authData) {
+                        const data = JSON.parse(authData);
+                        html += '<div class="info-item success"><strong>Auth Data (localStorage):</strong></div>';
+                        html += `<div class="info-item">${JSON.stringify(data, null, 2)}</div>`;
+                    } else {
+                        html += '<div class="info-item warning">No auth data in localStorage</div>';
+                    }
+                } catch (error) {
+                    html += `<div class="info-item error">Error reading localStorage: ${error.message}</div>`;
+                }
+
+                // Check sessionStorage
+                try {
+                    const errorData = sessionStorage.getItem('authError');
+                    if (errorData) {
+                        const data = JSON.parse(errorData);
+                        html += '<div class="info-item error"><strong>Error Data (sessionStorage):</strong></div>';
+                        html += `<div class="info-item">${JSON.stringify(data, null, 2)}</div>`;
+                    } else {
+                        html += '<div class="info-item">No error data in sessionStorage</div>';
+                    }
+                } catch (error) {
+                    html += `<div class="info-item error">Error reading sessionStorage: ${error.message}</div>`;
+                }
+
+                container.innerHTML = html;
+            }
+
+            log(message, type = 'info') {
+                const container = document.getElementById('debugOutput');
+                const timestamp = new Date().toLocaleTimeString();
+                const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info-item';
+                
+                container.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function clearAllData() {
+            localStorage.removeItem('authData');
+            sessionStorage.removeItem('authError');
+            alert('All stored data cleared!');
+            location.reload();
+        }
+
+        async function testApiConnection() {
+            const debugPage = window.debugPage;
+            debugPage.log('Testing API connection...', 'info');
+
+            try {
+                const url = getApiUrl('/api/v1/aitu/callback') + '?code=test&state=test';
+                debugPage.log(`Calling: ${url}`, 'info');
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+
+                const responseText = await response.text();
+                debugPage.log(`Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                debugPage.log(`Response: ${responseText}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                debugPage.log(`Connection Error: ${error.message}`, 'error');
+            }
+        }
+
+        function simulateCallback() {
+            const debugPage = window.debugPage;
+            debugPage.log('Simulating callback with test parameters...', 'info');
+
+            // Create a test URL with parameters
+            const testUrl = new URL(window.location.href);
+            testUrl.searchParams.set('code', 'test_authorization_code');
+            testUrl.searchParams.set('state', 'test_state_value');
+            testUrl.searchParams.set('scope', 'test_scope');
+
+            debugPage.log(`Test URL: ${testUrl.toString()}`, 'info');
+            
+            // Navigate to the test URL
+            window.location.href = testUrl.toString();
+        }
+
+        // Initialize debug page
+        document.addEventListener('DOMContentLoaded', () => {
+            window.debugPage = new DebugPage();
+        });
+    </script>
+</body>
+</html> 

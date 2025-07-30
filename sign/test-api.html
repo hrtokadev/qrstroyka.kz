@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="api-base-url" content="http://localhost:8393">
+    <meta name="api-base-url" content="https://adata.test.api.stroyka.kz">
     <title>API Test - Stroyka.kz</title>
     <style>
         * {
@@ -99,7 +99,7 @@
         
         <div class="form-group">
             <label for="apiUrl">API Base URL:</label>
-            <input type="text" id="apiUrl" value="http://localhost:8393" placeholder="Enter API base URL">
+            <input type="text" id="apiUrl" value="https://adata.test.api.stroyka.kz" placeholder="Enter API base URL">
         </div>
 
         <div class="form-group">
@@ -156,7 +156,16 @@
                 if (data.ok) {
                     resultsDiv.innerHTML += '<div class="result success">✅ Connection successful!\nStatus: ' + data.status + '\nResponse: ' + data.text + '</div>';
                 } else {
-                    resultsDiv.innerHTML += '<div class="result error">❌ Connection failed!\nStatus: ' + data.status + '\nResponse: ' + data.text + '</div>';
+                    let errorMessage = data.text;
+                    try {
+                        const errorData = JSON.parse(data.text);
+                        if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                    } catch (e) {
+                        // Keep original text if JSON parsing fails
+                    }
+                    resultsDiv.innerHTML += '<div class="result error">❌ Connection failed!\nStatus: ' + data.status + '\nError: ' + errorMessage + '\nFull Response: ' + data.text + '</div>';
                 }
             })
             .catch(error => {

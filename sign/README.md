@@ -57,7 +57,7 @@ The API base URL can be configured in several ways:
 
 4. **Default Configuration** (in `config.js`):
    ```javascript
-   window.API_CONFIG.API_BASE_URL = 'http://localhost:8393';
+   window.API_CONFIG.API_BASE_URL = 'https://adata.test.api.stroyka.kz';
    ```
 
 ### Authentication Response Format

@@ -50,6 +50,10 @@
         "dest": "/sign/test-api.html"
       },
       {
+        "src": "/sign/debug",
+        "dest": "/sign/debug.html"
+      },
+      {
         "handle": "filesystem"
       },
       {
