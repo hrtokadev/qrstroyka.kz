@@ -46,6 +46,10 @@
         "dest": "/sign/error.html"
       },
       {
+        "src": "/sign/test-api",
+        "dest": "/sign/test-api.html"
+      },
+      {
         "handle": "filesystem"
       },
       {

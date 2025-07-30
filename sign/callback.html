@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="api-base-url" content="http://localhost:8393">
     <title>Stroyka.kz - Авторизация</title>
     <style>
         * {
@@ -235,19 +236,45 @@
             async callAuthCallback(code, state) {
                 const url = getApiUrl('/api/v1/aitu/callback') + `?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`;
                 
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+                console.log('Calling API endpoint:', url);
+                console.log('Code:', code);
+                console.log('State:', state);
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        mode: 'cors',
+                        credentials: 'omit'
+                    });
+
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API Error Response:', errorText);
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
-                });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    const data = await response.json();
+                    console.log('API Success Response:', data);
+                    return data;
+                } catch (error) {
+                    console.error('Fetch error details:', error);
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    
+                    // Provide more specific error messages
+                    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                        throw new Error(`Не удалось подключиться к серверу. Проверьте URL API: ${url}`);
+                    }
+                    
+                    throw error;
                 }
-
-                return await response.json();
             }
 
             updateStatus(message) {

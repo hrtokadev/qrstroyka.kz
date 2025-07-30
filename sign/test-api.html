@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="api-base-url" content="http://localhost:8393">
+    <title>API Test - Stroyka.kz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 2rem;
+            background: #f5f7fa;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-right: 1rem;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            color: #c62828;
+        }
+
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Connection Test</h1>
+        
+        <div class="form-group">
+            <label for="apiUrl">API Base URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:8393" placeholder="Enter API base URL">
+        </div>
+
+        <div class="form-group">
+            <label for="testCode">Test Code:</label>
+            <input type="text" id="testCode" value="test_code" placeholder="Enter test authorization code">
+        </div>
+
+        <div class="form-group">
+            <label for="testState">Test State:</label>
+            <input type="text" id="testState" value="test_state" placeholder="Enter test state">
+        </div>
+
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="testConfig()">Test Config</button>
+        <button onclick="clearResults()">Clear Results</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        function testConnection() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const testCode = document.getElementById('testCode').value;
+            const testState = document.getElementById('testState').value;
+            const resultsDiv = document.getElementById('results');
+
+            const url = `${apiUrl}/api/v1/aitu/callback?code=${encodeURIComponent(testCode)}&state=${encodeURIComponent(testState)}`;
+
+            resultsDiv.innerHTML = '<div class="result info">Testing connection to: ' + url + '</div>';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                return response.text().then(text => {
+                    return {
+                        status: response.status,
+                        ok: response.ok,
+                        text: text
+                    };
+                });
+            })
+            .then(data => {
+                if (data.ok) {
+                    resultsDiv.innerHTML += '<div class="result success">✅ Connection successful!\nStatus: ' + data.status + '\nResponse: ' + data.text + '</div>';
+                } else {
+                    resultsDiv.innerHTML += '<div class="result error">❌ Connection failed!\nStatus: ' + data.status + '\nResponse: ' + data.text + '</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Test error:', error);
+                resultsDiv.innerHTML += '<div class="result error">❌ Connection error!\nError: ' + error.message + '\nType: ' + error.name + '</div>';
+            });
+        }
+
+        function testConfig() {
+            const resultsDiv = document.getElementById('results');
+            const apiBaseUrl = getApiBaseUrl();
+            
+            resultsDiv.innerHTML = '<div class="result info">Configuration Test:\nAPI Base URL: ' + apiBaseUrl + '\nFull URL: ' + getApiUrl('/api/v1/aitu/callback') + '</div>';
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Auto-test config on load
+        document.addEventListener('DOMContentLoaded', () => {
+            testConfig();
+        });
+    </script>
+</body>
+</html> 

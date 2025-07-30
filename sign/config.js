@@ -24,16 +24,19 @@ window.API_CONFIG = {
 function getApiBaseUrl() {
     // Check if API_BASE_URL is set via environment variable
     if (typeof window !== 'undefined' && window.API_BASE_URL) {
+        console.log('Using API_BASE_URL from window:', window.API_BASE_URL);
         return window.API_BASE_URL;
     }
     
     // Check if it's set via meta tag
     const metaTag = document.querySelector('meta[name="api-base-url"]');
     if (metaTag && metaTag.content) {
+        console.log('Using API_BASE_URL from meta tag:', metaTag.content);
         return metaTag.content;
     }
     
     // Return default
+    console.log('Using default API_BASE_URL:', window.API_CONFIG.API_BASE_URL);
     return window.API_CONFIG.API_BASE_URL;
 }
 
