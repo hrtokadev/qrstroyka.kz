@@ -34,6 +34,18 @@
         "dest": "/index.html"
       },
       {
+        "src": "/sign/callback",
+        "dest": "/sign/callback.html"
+      },
+      {
+        "src": "/sign/success",
+        "dest": "/sign/success.html"
+      },
+      {
+        "src": "/sign/error",
+        "dest": "/sign/error.html"
+      },
+      {
         "handle": "filesystem"
       },
       {
