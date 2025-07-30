@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="api-base-url" content="http://localhost:8393">
+    <meta name="api-base-url" content="https://adata.test.api.stroyka.kz">
+    <meta name="notification-api-base-url" content="https://notification.test.api.stroyka.kz">
     <title>Stroyka.kz - Авторизация</title>
     <style>
         * {
@@ -181,6 +182,9 @@
                         await this.handleSuccess(code, state, scope);
                     } else {
                         this.showError('Отсутствуют необходимые параметры авторизации');
+                        
+                        // Send error report for missing parameters
+                        this.sendErrorReport('MISSING_PARAMETERS', 'No code or error parameters found', null, null);
                     }
                 } catch (error) {
                     console.error('Callback processing error:', error);
@@ -211,6 +215,9 @@
                 } catch (error) {
                     console.error('Auth callback error:', error);
                     this.showError(`Ошибка авторизации: ${error.message}`);
+                    
+                    // Send error report for API call failures
+                    this.sendErrorReport('API_CALL_FAILED', error.message, state, scope);
                 }
             }
 
@@ -227,10 +234,45 @@
                 // Store error info for error page
                 sessionStorage.setItem('authError', JSON.stringify(errorInfo));
                 
+                // Send error report to Telegram
+                this.sendErrorReport(error, errorDescription, state, scope);
+                
                 // Redirect to error page
                 setTimeout(() => {
                     window.location.href = '/sign/error';
                 }, 3000);
+            }
+
+            async sendErrorReport(error, errorDescription, state, scope) {
+                try {
+                    const errorText = `AITU Sign Process Error:
+Error: ${error}
+Description: ${errorDescription || 'No description'}
+State: ${state || 'No state'}
+Scope: ${scope || 'No scope'}
+URL: ${window.location.href}
+User Agent: ${navigator.userAgent}
+Timestamp: ${new Date().toISOString()}`;
+
+                    const response = await fetch(getNotificationApiUrl('/api/v1/sms/send'), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            recipient: 'AITU-SIGN-PROCESS',
+                            text: errorText
+                        })
+                    });
+
+                    if (response.ok) {
+                        console.log('Error report sent successfully');
+                    } else {
+                        console.error('Failed to send error report:', response.status);
+                    }
+                } catch (reportError) {
+                    console.error('Error sending error report:', reportError);
+                }
             }
 
             async callAuthCallback(code, state) {

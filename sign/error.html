@@ -108,65 +108,71 @@
             word-break: break-all;
         }
 
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: transform 0.2s, background-color 0.2s;
-            font-size: 1rem;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: #45a049;
-        }
-
-        .btn-secondary {
-            background-color: #f5f5f5;
-            color: #333;
-            border: 1px solid #ddd;
-        }
-
-        .btn-secondary:hover {
-            background-color: #e8e8e8;
-        }
-
-        .btn-danger {
-            background-color: #f44336;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #d32f2f;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
 
         .help-text {
             font-size: 0.9rem;
             color: #666;
             margin-top: 1rem;
             line-height: 1.4;
+        }
+
+        .store-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            margin-top: 2rem;
+        }
+
+        .store-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background-color: #000;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            transition: transform 0.2s, background-color 0.2s;
+            width: 100%;
+            min-height: 56px;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .store-button:active {
+            transform: scale(0.98);
+            background-color: #333;
+        }
+
+        .store-button.app-store {
+            background-color: #000;
+        }
+
+        .store-button.play-store {
+            background-color: #01875f;
+        }
+
+        .store-icon {
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+        }
+
+        @media (min-width: 768px) {
+            .store-buttons {
+                flex-direction: row;
+                max-width: 600px;
+            }
+
+            .store-button {
+                min-width: 200px;
+            }
         }
 
         /* Safe area insets for modern mobile browsers */
@@ -196,20 +202,25 @@
             <div id="errorDetailsContent"></div>
         </div>
 
-        <div class="action-buttons">
-            <button class="btn btn-primary" onclick="retryAuth()">
-                Попробовать снова
-            </button>
-            <button class="btn btn-secondary" onclick="goToMainPage()">
-                Перейти на главную
-            </button>
-            <button class="btn btn-danger" onclick="clearAuthData()">
-                Очистить данные
-            </button>
-        </div>
+
 
         <div class="help-text">
             Если проблема повторяется, попробуйте очистить данные браузера или обратитесь в службу поддержки.
+        </div>
+
+        <div class="store-buttons">
+            <a href="https://apps.apple.com/us/app/stroyka-kz/id6742178994" class="store-button app-store">
+                <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                </svg>
+                App Store
+            </a>
+            <a href="https://play.google.com/store/apps/details?id=kz.cmrhub" class="store-button play-store">
+                <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.5,12.92 20.16,13.19L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                </svg>
+                Google Play
+            </a>
         </div>
     </div>
 
@@ -276,29 +287,7 @@
             }
         }
 
-        function retryAuth() {
-            // Clear any stored error data
-            sessionStorage.removeItem('authError');
-            
-            // Redirect back to the main page or auth page
-            window.location.href = '/';
-        }
 
-        function goToMainPage() {
-            window.location.href = '/';
-        }
-
-        function clearAuthData() {
-            // Clear all authentication related data
-            localStorage.removeItem('authData');
-            sessionStorage.removeItem('authError');
-            
-            // Show confirmation
-            alert('Данные авторизации очищены');
-            
-            // Redirect to main page
-            window.location.href = '/';
-        }
 
         // Initialize error page when page loads
         document.addEventListener('DOMContentLoaded', () => {
