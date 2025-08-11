@@ -45,6 +45,10 @@
         "src": "/sign/error",
         "dest": "/sign/error.html"
       },
+      {
+        "src": "/sign/document/.*",
+        "dest": "/sign/docsign.html"
+      },
 
       {
         "handle": "filesystem"

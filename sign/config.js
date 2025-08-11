@@ -6,8 +6,8 @@
 // API Configuration
 window.API_CONFIG = {
     // API Base URL - can be overridden by environment variables
-    // API_BASE_URL: 'https://localhost:8393',
-     API_BASE_URL: 'https://adata.test.api.stroyka.kz',
+    API_BASE_URL: 'https://localhost:8393',
+    // API_BASE_URL: 'https://adata.test.api.stroyka.kz',
     
     // Notification API Base URL - can be overridden by environment variables
     NOTIFICATION_API_BASE_URL: 'https://notification.test.api.stroyka.kz',
