@@ -34,6 +34,10 @@
         "dest": "/index.html"
       },
       {
+        "src": "/company/.*",
+        "dest": "/index.html"
+      },
+      {
         "src": "/sign/callback",
         "dest": "/sign/callback.html"
       },

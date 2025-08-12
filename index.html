@@ -190,7 +190,7 @@
 <body>
     <div class="container">
         <div class="logo">
-            <img src="./logo.jpeg" alt="Стройка.kz" onerror="this.style.display='none'">
+            <img src="./logo.png" alt="Стройка.kz" onerror="this.style.display='none'">
         </div>
         <h1>Stroyka.kz</h1>
         <div id="deepLinkContent"></div>
@@ -220,19 +220,21 @@
             const defaultContent = document.getElementById('defaultContent');
             
             // Regular expression to match the patterns
-            const pattern = /^\/(order|resume|equipment)\/([^\/]+)$/;
+            const pattern = /^\/(order|resume|equipment|company)\/([^\/]+)$/;
             const match = path.match(pattern);
             
             const typeMap = {
                 'order': 'заказ',
                 'resume': 'резюме',
-                'equipment': 'объявление'
+                'equipment': 'объявление',
+                'company': 'компания'
             };
 
             const typeDescriptionMap = {
                 'order': 'Просмотреть детали заказа',
                 'resume': 'Просмотреть резюме',
-                'equipment': 'Просмотреть объявление об оборудовании'
+                'equipment': 'Просмотреть объявление об оборудовании',
+                'company': 'Просмотреть профиль компании'
             };
             
             if (match) {
