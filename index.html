@@ -245,6 +245,9 @@
                 if (type === 'company') {
                     deepLinkUrl = `${window.location.origin}/${type}/${regNumber}?open=1`;
                 }
+                const openControlHtml = type === 'company'
+                    ? `<a class="open-app-button" href="${deepLinkUrl}">Открыть в приложении</a>`
+                    : `<button class=\"open-app-button\" onclick=\"window.location.href='${deepLinkUrl}'\">Открыть в приложении</button>`;
                 
                 deepLinkContent.innerHTML = `
                     <div class="deep-link-container">
@@ -254,9 +257,7 @@
                         <p style="color: #666; margin-bottom: 1.5rem;">
                             Для просмотра полной информации, откройте ${displayType} в приложении Stroyka.kz
                         </p>
-                        <button class="open-app-button" onclick="window.location.href='${deepLinkUrl}'">
-                            Открыть в приложении
-                        </button>
+                        ${openControlHtml}
                         <div class="divider"></div>
                     </div>
                 `;
