@@ -5,13 +5,11 @@
 
 // API Configuration
 window.API_CONFIG = {
-    // API Base URL - can be overridden by environment variables
-    API_BASE_URL: 'https://localhost:8393',
-    // API_BASE_URL: 'https://adata.test.api.stroyka.kz',
+    // API Base URL - will be set by environment variables
+    API_BASE_URL: window.ENV && window.ENV.API_BASE_URL || 'https://localhost:8393',
     
-    // Notification API Base URL - can be overridden by environment variables
-    NOTIFICATION_API_BASE_URL: 'https://notification.test.api.stroyka.kz',
-    // NOTIFICATION_API_BASE_URL: 'http://localhost:8292',
+    // Notification API Base URL - will be set by environment variables
+    NOTIFICATION_API_BASE_URL: window.ENV && window.ENV.NOTIFICATION_API_BASE_URL || 'https://notification.test.api.stroyka.kz',
     
     // Auth endpoints
     AUTH_CALLBACK_ENDPOINT: '/api/v1/aitu/callback',

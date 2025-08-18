@@ -1,5 +1,6 @@
 {
     "version": 2,
+    "buildCommand": "sed -i \"s|{{API_BASE_URL}}|$API_BASE_URL|g; s|{{NOTIFICATION_API_BASE_URL}}|$NOTIFICATION_API_BASE_URL|g\" public/env.js",
     "builds": [
       {
         "src": "**/*",
