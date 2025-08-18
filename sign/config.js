@@ -5,11 +5,11 @@
 
 // API Configuration
 window.API_CONFIG = {
-    // API Base URL - will be set by environment variables
-    API_BASE_URL: window.ENV && window.ENV.API_BASE_URL || 'https://localhost:8393',
+    // API_BASE_URL: 'http://localhost:8393',
+    API_BASE_URL: 'https://adata.test.api.stroyka.kz',
     
-    // Notification API Base URL - will be set by environment variables
-    NOTIFICATION_API_BASE_URL: window.ENV && window.ENV.NOTIFICATION_API_BASE_URL || 'https://notification.test.api.stroyka.kz',
+    // NOTIFICATION_API_BASE_URL: 'http://localhost:8292',
+    NOTIFICATION_API_BASE_URL: 'https://notification.test.api.stroyka.kz',
     
     // Auth endpoints
     AUTH_CALLBACK_ENDPOINT: '/api/v1/aitu/callback',
@@ -26,22 +26,8 @@ window.API_CONFIG = {
     REDIRECT_DELAY: 2000,   // 2 seconds
 };
 
-// Function to get API base URL with environment variable support
+// Function to get API base URL
 function getApiBaseUrl() {
-    console.log('window.ENV:', window.ENV);
-    
-    // First check ENV configuration
-    if (typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL) {
-        console.log('Using API_BASE_URL from ENV:', window.ENV.API_BASE_URL);
-        if (window.ENV.API_BASE_URL.includes('__API_BASE_URL__')) {
-            console.log('Warning: Environment variable not properly replaced');
-            return window.API_CONFIG.API_BASE_URL;
-        }
-        return window.ENV.API_BASE_URL;
-    }
-    
-    // Return default
-    console.log('Using default API_BASE_URL:', window.API_CONFIG.API_BASE_URL);
     return window.API_CONFIG.API_BASE_URL;
 }
 
@@ -51,16 +37,8 @@ function getApiUrl(endpoint) {
     return `${baseUrl}${endpoint}`;
 }
 
-// Function to get notification API base URL with environment variable support
+// Function to get notification API base URL
 function getNotificationApiBaseUrl() {
-    // First check ENV configuration
-    if (typeof window !== 'undefined' && window.ENV && window.ENV.NOTIFICATION_API_BASE_URL) {
-        console.log('Using NOTIFICATION_API_BASE_URL from ENV:', window.ENV.NOTIFICATION_API_BASE_URL);
-        return window.ENV.NOTIFICATION_API_BASE_URL;
-    }
-    
-    // Return default
-    console.log('Using default NOTIFICATION_API_BASE_URL:', window.API_CONFIG.NOTIFICATION_API_BASE_URL);
     return window.API_CONFIG.NOTIFICATION_API_BASE_URL;
 }
 
