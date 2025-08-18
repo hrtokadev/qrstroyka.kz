@@ -96,32 +96,106 @@ function formatDate(dateString) {
     }
 }
 
+// Language translations
+const translations = {
+    ru: {
+        LLP: 'Юр. лицо',
+        Person: 'Физ. лицо',
+        iinBin: 'ИИН/БИН',
+        iin: 'ИИН',
+        notSpecified: 'Не указано',
+        phone: 'Телефон',
+        signedAt: 'Подписано',
+        signButton: 'Подписать документ',
+        signers: 'Подписанты',
+        documentToSign: 'Документ для подписи',
+        created: 'Создан',
+        useApp: 'Для подписания документа используйте приложение Stroyka.kz',
+        loading: 'Загрузка документа...',
+        error: 'Ошибка',
+        retry: 'Повторить',
+        preparingSignature: 'Подготовка подписи...',
+        downloadDoc: 'Скачать документ',
+        openInNewWindow: 'Открыть документ в новом окне',
+        signLinkNotReceived: 'Ссылка для подписи не получена',
+        signingError: 'Ошибка при инициации подписи. Пожалуйста, попробуйте позже.',
+        loadError: 'Не удалось загрузить документ. Пожалуйста, попробуйте позже.',
+        signStates: {
+            SIGNED: 'Подписано',
+            PENDING: 'Ожидает подписи',
+            REJECTED: 'Отклонено',
+            EXPIRED: 'Истекло'
+        }
+    },
+    kk: {
+        LLP: 'Заңды тұлға',
+        Person: 'Жеке тұлға',
+        iinBin: 'ЖСН/БСН',
+        iin: 'ЖСН',
+        notSpecified: 'Көрсетілмеген',
+        phone: 'Телефон',
+        signedAt: 'Қол қойылды',
+        signButton: 'Құжатқа қол қою',
+        signers: 'Қол қоюшылар',
+        documentToSign: 'Қол қою үшін құжат',
+        created: 'Құрылған',
+        useApp: 'Құжатқа қол қою үшін Stroyka.kz қосымшасын пайдаланыңыз',
+        loading: 'Құжат жүктелуде...',
+        error: 'Қате',
+        retry: 'Қайталау',
+        preparingSignature: 'Қолтаңба дайындалуда...',
+        downloadDoc: 'Құжатты жүктеу',
+        openInNewWindow: 'Құжатты жаңа терезеде ашу',
+        signLinkNotReceived: 'Қол қою сілтемесі алынбады',
+        signingError: 'Қол қою кезінде қате орын алды. Кейінірек қайталап көріңіз.',
+        loadError: 'Құжатты жүктеу мүмкін болмады. Кейінірек қайталап көріңіз.',
+        signStates: {
+            SIGNED: 'Қол қойылды',
+            PENDING: 'Қол қою күтілуде',
+            REJECTED: 'Қабылданбады',
+            EXPIRED: 'Мерзімі өтті'
+        }
+    }
+};
+
+let currentLanguage = 'ru';
+
+// Function to get translation
+function t(key) {
+    return translations[currentLanguage][key] || key;
+}
+
+// Function to switch language
+function switchLanguage(lang) {
+    currentLanguage = lang;
+    const buttons = document.querySelectorAll('.lang-btn');
+    buttons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    // Re-render the page with new language
+    initializeDocumentSigning();
+}
+
 // Function to get signer type and info
 function getSignerInfo(signer) {
     if (signer.bin && signer.bin.trim() !== '') {
         return {
-            type: 'LLP',
-            info: `ИИН/БИН: ${signer.bin}`,
-            name: signer.name || 'Не указано'
+            type: t('LLP'),
+            info: `${t('iinBin')}: ${signer.bin}`,
+            name: signer.name || t('notSpecified')
         };
     } else {
         return {
-            type: 'Person',
-            info: `ИИН: ${signer.iin || 'Не указано'}`,
-            name: signer.name || 'Не указано'
+            type: t('Person'),
+            info: `${t('iin')}: ${signer.iin || t('notSpecified')}`,
+            name: signer.name || t('notSpecified')
         };
     }
 }
 
 // Function to get sign state text
 function getSignStateText(signState) {
-    const stateMap = {
-        'SIGNED': 'Подписано',
-        'PENDING': 'Ожидает подписи',
-        'REJECTED': 'Отклонено',
-        'EXPIRED': 'Истекло'
-    };
-    return stateMap[signState] || signState;
+    return translations[currentLanguage].signStates[signState] || signState;
 }
 
 // Function to get sign state class
@@ -141,8 +215,7 @@ function renderDocumentSigningPage(data) {
     let signatoryId = getSignatoryIdFromPath();
 
     if (!signatoryId) {
-            //throw new Error('Неверный URL. ID подписанта не найден.');
-            signatoryId = "0198990b-c489-70b5-bba0-4bf6058bb068";
+        signatoryId = "0198990b-c489-70b5-bba0-4bf6058bb068";
     }
     
     // Find current signer - the one whose ID matches the signatoryId in URL
@@ -152,20 +225,25 @@ function renderDocumentSigningPage(data) {
     // Get file info
     const fileInfo = data.signApplicationFile;
     
+    // Sort signers - main signer first, then others
+    const sortedSigners = [...data.signers].sort((a, b) => {
+        if (a.isMainSigner && !b.isMainSigner) return -1;
+        if (!a.isMainSigner && b.isMainSigner) return 1;
+        return 0;
+    });
+    
     // Create HTML content
     let html = `
         <div class="signers-section">
-            <h3>Подписанты</h3>
+            <h3>${t('signers')}</h3>
             <div class="signers-list">
     `;
     
-    data.signers.forEach(signer => {
+    sortedSigners.forEach(signer => {
         const signerInfo = getSignerInfo(signer);
         const isCurrentSigner = signer.id === signatoryId;
         const signStateClass = getSignStateClass(signer.signState);
         const signStateText = getSignStateText(signer.signState);
-        
-
         
         html += `
             <div class="signer-item ${isCurrentSigner ? 'current-signer' : ''} ${signStateClass}">
@@ -176,13 +254,13 @@ function renderDocumentSigningPage(data) {
                 <div class="signer-details">
                     <div class="signer-name">${signerInfo.name}</div>
                     <div class="signer-id">${signerInfo.info}</div>
-                    <div class="signer-phone">Телефон: ${signer.phone || 'Не указано'}</div>
-                    ${signer.signedTime ? `<div class="signed-time">Подписано: ${formatDate(signer.signedTime)}</div>` : ''}
+                    <div class="signer-phone">${t('phone')}: ${signer.phone || t('notSpecified')}</div>
+                    ${signer.signedTime ? `<div class="signed-time">${t('signedAt')}: ${formatDate(signer.signedTime)}</div>` : ''}
                 </div>
                 ${isCurrentSigner && signer.signState === 'PENDING' ? `
                     <div class="sign-button-container">
                         <button onclick="initiateSigning('${signatoryId}')" class="sign-button">
-                            Подписать документ
+                            ${t('signButton')}
                         </button>
                     </div>
                 ` : ''}
@@ -195,17 +273,17 @@ function renderDocumentSigningPage(data) {
         </div>
         
         <div class="document-info">
-            <h2>Документ для подписи</h2>
+            <h2>${t('documentToSign')}</h2>
             <div class="file-details">
-                <div class="file-name">${fileInfo.fileName || 'Документ'}</div>
-                <div class="file-date">Создан: ${formatDate(data.createdDate)}</div>
+                <div class="file-name">${fileInfo.fileName || t('notSpecified')}</div>
+                <div class="file-date">${t('created')}: ${formatDate(data.createdDate)}</div>
             </div>
             <div class="pdf-viewer">
                 <object data="${fileInfo.fileRefWithQr}" type="application/pdf" width="100%" height="600">
-                    <p>Ваш браузер не поддерживает просмотр PDF. <a href="${fileInfo.fileRefWithQr}" target="_blank">Скачать документ</a></p>
+                    <p>${t('downloadDoc')} <a href="${fileInfo.fileRefWithQr}" target="_blank">${t('downloadDoc')}</a></p>
                 </object>
                 <div class="pdf-fallback">
-                    <a href="${fileInfo.fileRefWithQr}" target="_blank" class="download-link">Открыть документ в новом окне</a>
+                    <a href="${fileInfo.fileRefWithQr}" target="_blank" class="download-link">${t('openInNewWindow')}</a>
                 </div>
             </div>
         </div>
@@ -213,7 +291,7 @@ function renderDocumentSigningPage(data) {
         <div class="action-section">
             ${isCurrentUserSigning && currentSigner.signState === 'PENDING' ? `
                 <div class="sign-action">
-                    <p>Для подписания документа используйте приложение Stroyka.kz</p>
+                    <p>${t('useApp')}</p>
                     <div class="app-buttons">
                         <a href="https://apps.apple.com/us/app/stroyka-kz/id6742178994" class="app-button app-store">
                             <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -241,9 +319,9 @@ function showError(message) {
     const container = document.getElementById('documentContainer');
     container.innerHTML = `
         <div class="error-container">
-            <h2>Ошибка</h2>
+            <h2>${t('error')}</h2>
             <p>${message}</p>
-            <button onclick="window.location.reload()" class="retry-button">Повторить</button>
+            <button onclick="window.location.reload()" class="retry-button">${t('retry')}</button>
         </div>
     `;
 }
@@ -254,7 +332,7 @@ function showLoading() {
     container.innerHTML = `
         <div class="loading-container">
             <div class="spinner"></div>
-            <p>Загрузка документа...</p>
+            <p>${t('loading')}</p>
         </div>
     `;
 }
@@ -266,7 +344,7 @@ async function initiateSigning(signatoryId) {
         const signButton = document.querySelector('.sign-button');
         if (signButton) {
             signButton.disabled = true;
-            signButton.textContent = 'Подготовка подписи...';
+            signButton.textContent = t('preparingSignature');
         }
         
         // Call the signing endpoint
@@ -292,19 +370,35 @@ async function initiateSigning(signatoryId) {
         if (data.signLink) {
             window.location.href = data.signLink;
         } else {
-            throw new Error('Ссылка для подписи не получена');
+            throw new Error(t('signLinkNotReceived'));
         }
         
     } catch (error) {
         console.error('Error initiating signing:', error);
-        alert('Ошибка при инициации подписи. Пожалуйста, попробуйте позже.');
+        alert(t('signingError'));
         
         // Reset button state
         const signButton = document.querySelector('.sign-button');
         if (signButton) {
             signButton.disabled = false;
-            signButton.textContent = 'Подписать документ';
+            signButton.textContent = t('signButton');
         }
+    }
+}
+
+// Function to initialize language buttons
+function initializeLanguageButtons() {
+    const buttons = document.querySelectorAll('.lang-btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchLanguage(btn.dataset.lang);
+        });
+    });
+    
+    // Set initial active state
+    const activeButton = document.querySelector(`[data-lang="${currentLanguage}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
     }
 }
 
@@ -315,16 +409,16 @@ async function initializeDocumentSigning() {
         
         let signatoryId = getSignatoryIdFromPath();
         if (!signatoryId) {
-            //throw new Error('Неверный URL. ID подписанта не найден.');
             signatoryId = "0198990b-c489-70b5-bba0-4bf6058bb068";
         }
         
         const data = await fetchSignatoryData(signatoryId);
         renderDocumentSigningPage(data);
+        initializeLanguageButtons();
         
     } catch (error) {
         console.error('Error initializing document signing:', error);
-        showError('Не удалось загрузить документ. Пожалуйста, попробуйте позже.');
+        showError(t('loadError'));
     }
 }
 
