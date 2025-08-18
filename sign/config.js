@@ -28,17 +28,10 @@ window.API_CONFIG = {
 
 // Function to get API base URL with environment variable support
 function getApiBaseUrl() {
-    // Check if API_BASE_URL is set via environment variable
-    if (typeof window !== 'undefined' && window.API_BASE_URL) {
-        console.log('Using API_BASE_URL from window:', window.API_BASE_URL);
-        return window.API_BASE_URL;
-    }
-    
-    // Check if it's set via meta tag
-    const metaTag = document.querySelector('meta[name="api-base-url"]');
-    if (metaTag && metaTag.content) {
-        console.log('Using API_BASE_URL from meta tag:', metaTag.content);
-        return metaTag.content;
+    // First check ENV configuration
+    if (typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL) {
+        console.log('Using API_BASE_URL from ENV:', window.ENV.API_BASE_URL);
+        return window.ENV.API_BASE_URL;
     }
     
     // Return default
@@ -54,17 +47,10 @@ function getApiUrl(endpoint) {
 
 // Function to get notification API base URL with environment variable support
 function getNotificationApiBaseUrl() {
-    // Check if NOTIFICATION_API_BASE_URL is set via environment variable
-    if (typeof window !== 'undefined' && window.NOTIFICATION_API_BASE_URL) {
-        console.log('Using NOTIFICATION_API_BASE_URL from window:', window.NOTIFICATION_API_BASE_URL);
-        return window.NOTIFICATION_API_BASE_URL;
-    }
-    
-    // Check if it's set via meta tag
-    const metaTag = document.querySelector('meta[name="notification-api-base-url"]');
-    if (metaTag && metaTag.content) {
-        console.log('Using NOTIFICATION_API_BASE_URL from meta tag:', metaTag.content);
-        return metaTag.content;
+    // First check ENV configuration
+    if (typeof window !== 'undefined' && window.ENV && window.ENV.NOTIFICATION_API_BASE_URL) {
+        console.log('Using NOTIFICATION_API_BASE_URL from ENV:', window.ENV.NOTIFICATION_API_BASE_URL);
+        return window.ENV.NOTIFICATION_API_BASE_URL;
     }
     
     // Return default
