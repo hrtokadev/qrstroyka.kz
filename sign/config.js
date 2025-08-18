@@ -28,9 +28,15 @@ window.API_CONFIG = {
 
 // Function to get API base URL with environment variable support
 function getApiBaseUrl() {
+    console.log('window.ENV:', window.ENV);
+    
     // First check ENV configuration
     if (typeof window !== 'undefined' && window.ENV && window.ENV.API_BASE_URL) {
         console.log('Using API_BASE_URL from ENV:', window.ENV.API_BASE_URL);
+        if (window.ENV.API_BASE_URL.includes('__API_BASE_URL__')) {
+            console.log('Warning: Environment variable not properly replaced');
+            return window.API_CONFIG.API_BASE_URL;
+        }
         return window.ENV.API_BASE_URL;
     }
     

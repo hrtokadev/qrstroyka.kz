@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "sed -i \"s|{{API_BASE_URL}}|$API_BASE_URL|g; s|{{NOTIFICATION_API_BASE_URL}}|$NOTIFICATION_API_BASE_URL|g\" env.js",
+    "buildCommand": "node -e \"const fs=require('fs');const content=fs.readFileSync('env.js','utf8');fs.writeFileSync('env.js',content.replace('__API_BASE_URL__',process.env.API_BASE_URL).replace('__NOTIFICATION_API_BASE_URL__',process.env.NOTIFICATION_API_BASE_URL));\"",
     "builds": [
       {
         "src": "**/*",
