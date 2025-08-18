@@ -200,19 +200,19 @@
                     
                     const response = await this.callAuthCallback(code, state);
                     
-                    if (response.access_token) {
+                    if (response.signatoryId) {
                         this.updateStatus('Авторизация успешна!');
                         this.showSuccess('Авторизация прошла успешно', response);
                         
-                        // Store token and user data
+                        // Store user data
                         this.storeAuthData(response);
                         
-                        // Redirect to success page
+                        // Redirect to success page with signatoryId
                         setTimeout(() => {
-                            window.location.href = '/sign/success';
+                            window.location.href = `/sign/success?signatoryId=${encodeURIComponent(response.signatoryId)}`;
                         }, 2000);
                     } else {
-                        throw new Error('Неверный ответ от сервера');
+                        throw new Error('Неверный ответ от сервера: отсутствует signatoryId');
                     }
                 } catch (error) {
                     console.error('Auth callback error:', error);
@@ -393,13 +393,11 @@ Timestamp: ${new Date().toISOString()}`;
             }
 
             storeAuthData(authResponse) {
-                // Store authentication data in localStorage or sessionStorage
+                // Store authentication data in localStorage
                 const authData = {
-                    accessToken: authResponse.access_token,
-                    expiresIn: authResponse.expires_in,
-                    tokenType: authResponse.token_type,
+                    signatoryId: authResponse.signatoryId,
                     scope: authResponse.scope,
-                    userData: authResponse.user_data,
+                    user_data: authResponse.user_data,
                     phone: authResponse.phone,
                     iin: authResponse.iin,
                     bin: authResponse.bin,
