@@ -270,7 +270,7 @@ const translations = {
         notSpecified: 'Не указано',
         phone: 'Телефон',
         signedAt: 'Подписано',
-        signButton: 'Подписать документ',
+        signButton: 'Подписать',
         signers: 'Подписанты',
         documentToSign: 'Документ для подписи',
         created: 'Создан',
@@ -549,6 +549,11 @@ function renderDocumentSigningPage(data) {
         </div>
         
         <div class="document-info">
+            ${isCurrentUserSigning && currentSigner.signState === 'PENDING' ? `
+                <div class="sign-button-container">
+                    <button class="sign-button" onclick="initiateSigning('${currentSigner.id}')">${t('signButton')}</button>
+                </div>
+            ` : ''}
             <h2>${t('documentToSign')}</h2>
             <div class="file-details">
                 <div class="file-name">${fileInfo.fileName || t('notSpecified')}</div>
