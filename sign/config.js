@@ -4,7 +4,7 @@
  */
 
 // API Configuration
-window.API_CONFIG = {
+const DEFAULT_API_CONFIG = {
     // API_BASE_URL: 'http://localhost:8393',
     API_BASE_URL: 'https://adata.test.api.stroyka.kz',
     
@@ -25,10 +25,21 @@ window.API_CONFIG = {
     REQUEST_TIMEOUT: 30000, // 30 seconds
     REDIRECT_DELAY: 2000,   // 2 seconds
 };
+if (typeof window !== 'undefined') {
+    window.API_CONFIG = window.API_CONFIG || DEFAULT_API_CONFIG;
+}
+
+// Safe accessor for configuration
+function getApiConfig() {
+    if (typeof window !== 'undefined' && window.API_CONFIG) {
+        return window.API_CONFIG;
+    }
+    return DEFAULT_API_CONFIG;
+}
 
 // Function to get API base URL
 function getApiBaseUrl() {
-    return window.API_CONFIG.API_BASE_URL;
+    return getApiConfig().API_BASE_URL;
 }
 
 // Function to get full API URL
@@ -39,7 +50,7 @@ function getApiUrl(endpoint) {
 
 // Function to get notification API base URL
 function getNotificationApiBaseUrl() {
-    return window.API_CONFIG.NOTIFICATION_API_BASE_URL;
+    return getApiConfig().NOTIFICATION_API_BASE_URL;
 }
 
 // Function to get full notification API URL
@@ -55,6 +66,6 @@ if (typeof module !== 'undefined' && module.exports) {
         getApiUrl,
         getNotificationApiBaseUrl,
         getNotificationApiUrl,
-        API_CONFIG: window.API_CONFIG
+        API_CONFIG: getApiConfig()
     };
 } 
