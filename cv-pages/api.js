@@ -262,7 +262,7 @@ class CVApiService {
      * Get vehicle categories for driver licenses
      */
     async getVehicleCategories() {
-        const url = `http://38.107.235.75:8092/api/v1/dictionary/vehicle-categories`;
+        const url = `${API_BASE_URL}/dictionary/vehicle-categories`;
         return await this.makeRequest(url);
     }
 
