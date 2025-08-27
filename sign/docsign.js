@@ -4,7 +4,7 @@
  */
 
 // API Configuration
-window.DOCSIGN_CONFIG = {
+const DEFAULT_DOCSIGN_CONFIG = {
     // API Base URL - can be overridden by environment variables
     //API_BASE_URL: 'http://localhost:8080',
     API_BASE_URL: 'https://cmr.test.api.stroyka.kz',
@@ -17,24 +17,49 @@ window.DOCSIGN_CONFIG = {
     REQUEST_TIMEOUT: 30000, // 30 seconds
 };
 
+// Expose to browser when available (without breaking SSR/Node)
+if (typeof window !== 'undefined') {
+    window.DOCSIGN_CONFIG = window.DOCSIGN_CONFIG || DEFAULT_DOCSIGN_CONFIG;
+}
+
+// Safe accessor for configuration (works in browser and SSR/Node)
+function getDocSignConfig() {
+    if (typeof window !== 'undefined' && window.DOCSIGN_CONFIG) {
+        return window.DOCSIGN_CONFIG;
+    }
+    if (typeof globalThis !== 'undefined' && globalThis.DOCSIGN_CONFIG) {
+        return globalThis.DOCSIGN_CONFIG;
+    }
+    return DEFAULT_DOCSIGN_CONFIG;
+}
+
 // Function to get API base URL with environment variable support
 function getDocSignApiBaseUrl() {
     // Check if API_BASE_URL is set via environment variable
     if (typeof window !== 'undefined' && window.API_BASE_URL) {
-        console.log('Using API_BASE_URL from window:', window.API_BASE_URL);
         return window.API_BASE_URL;
     }
     
     // Check if it's set via meta tag
-    const metaTag = document.querySelector('meta[name="api-base-url"]');
-    if (metaTag && metaTag.content) {
-        console.log('Using API_BASE_URL from meta tag:', metaTag.content);
-        return metaTag.content;
+    let metaTagContent = null;
+    if (typeof document !== 'undefined') {
+        const metaTag = document.querySelector('meta[name="api-base-url"]');
+        if (metaTag && metaTag.content) {
+            metaTagContent = metaTag.content;
+        }
+    }
+    if (metaTagContent) {
+        return metaTagContent;
     }
     
     // Return default
-    console.log('Using default API_BASE_URL:', window.DOCSIGN_CONFIG.API_BASE_URL);
-    return window.DOCSIGN_CONFIG.API_BASE_URL;
+    const cfg = getDocSignConfig();
+    return cfg.API_BASE_URL;
+}
+
+// Helper to get full config (internal)
+function _cfg() {
+    return getDocSignConfig();
 }
 
 // Function to get full API URL
@@ -43,25 +68,158 @@ function getDocSignApiUrl(endpoint) {
     return `${baseUrl}${endpoint}`;
 }
 
+// Helper to get PDF endpoint for sign application
+function getFilesApiPdfUrl(signApplicationId) {
+    // Endpoint as per backend controller mapping
+    return getDocSignApiUrl(`/rest/api/v1/files/sign-applications/${signApplicationId}/pdf`);
+}
+
+// Normalize any provided URL or path to an absolute URL.
+// - If it's already absolute (http/https), return as-is.
+// - If it starts with //, prefix current protocol.
+// - If it starts with '/rest/' or 'rest/', treat it as API endpoint and prefix DocSign API base.
+// - Otherwise, make it absolute on current origin.
+function resolveDocSignUrl(urlOrPath) {
+    if (!urlOrPath) return urlOrPath;
+    try {
+        const val = String(urlOrPath).trim();
+        if (/^https?:\/\//i.test(val)) return val;
+        if (/^\/\//.test(val)) return `${window.location.protocol}${val}`;
+        const apiBase = getDocSignApiBaseUrl().replace(/\/+$/,'');
+        if (/^\/?rest\//i.test(val)) {
+            const path = val.startsWith('/') ? val : `/${val}`;
+            return `${apiBase}${path}`;
+        }
+        // Generic relative path -> absolute on current origin
+        const absPath = val.startsWith('/') ? val : `/${val}`;
+        return `${window.location.origin}${absPath}`;
+    } catch (_) {
+        return urlOrPath;
+    }
+}
+
 // Function to extract UUID from URL path
 function getSignatoryIdFromPath() {
+    if (typeof window === 'undefined') return null;
     const path = window.location.pathname;
     const match = path.match(/\/sign\/document\/([^\/]+)$/);
     return match ? match[1] : null;
 }
 
+// Helper: get query parameter value
+function getQueryParam(name) {
+    try {
+        if (typeof window === 'undefined' || !window.location || !window.location.search) return null;
+        const params = new URLSearchParams(window.location.search);
+        const val = params.get(name);
+        return val && val.trim() !== '' ? val.trim() : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+// Helper: UUID detector and extractor
+function isUuid(str) {
+    return typeof str === 'string' && /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i.test(str);
+}
+function extractUuid(str) {
+    if (typeof str !== 'string') return null;
+    const m = str.match(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i);
+    return m ? m[0] : null;
+}
+
+// Helper: get signApplicationId from URL query (supports several keys)
+function getSignApplicationIdFromQuery() {
+    return (
+        getQueryParam('signApplicationId') ||
+        getQueryParam('signApplicationUuid') ||
+        getQueryParam('signAppId') ||
+        getQueryParam('applicationId') ||
+        getQueryParam('saId') ||
+        getQueryParam('sa') ||
+        getQueryParam('uuid') ||
+        getQueryParam('id') ||
+        null
+    );
+}
+
+// Extract signApplicationId from backend data (robust, checks common locations)
+function extractSignApplicationIdFromData(obj) {
+    try {
+        if (!obj || typeof obj !== 'object') return null;
+        const candidates = [];
+        const push = (v, from) => {
+            if (typeof v === 'string' && v.trim()) {
+                candidates.push({ id: v.trim(), from });
+            }
+        };
+        // Top-level common keys
+        push(obj.signApplicationId, 'data.signApplicationId');
+        push(obj.signApplicationUuid, 'data.signApplicationUuid');
+        push(obj.applicationId, 'data.applicationId');
+        push(obj.signAppId, 'data.signAppId');
+        // Some backends may simply put id at root (use low priority)
+        if (obj.id) push(obj.id, 'data.id');
+        if (obj.uuid) push(obj.uuid, 'data.uuid');
+        // Nested: signApplication object
+        if (obj.signApplication && typeof obj.signApplication === 'object') {
+            push(obj.signApplication.id, 'data.signApplication.id');
+            push(obj.signApplication.uuid, 'data.signApplication.uuid');
+        }
+        // Nested: signApplicationFile object
+        if (obj.signApplicationFile && typeof obj.signApplicationFile === 'object') {
+            const f = obj.signApplicationFile;
+            push(f.signApplicationId, 'data.signApplicationFile.signApplicationId');
+            push(f.applicationId, 'data.signApplicationFile.applicationId');
+            if (f.signApplication && typeof f.signApplication === 'object') {
+                push(f.signApplication.id, 'data.signApplicationFile.signApplication.id');
+                push(f.signApplication.uuid, 'data.signApplicationFile.signApplication.uuid');
+            }
+            if (f.fileRefWithQr) {
+                const u = extractUuid(String(f.fileRefWithQr));
+                if (u) push(u, 'data.signApplicationFile.fileRefWithQr(uuid)');
+            }
+            if (f.fileRef) {
+                const u = extractUuid(String(f.fileRef));
+                if (u) push(u, 'data.signApplicationFile.fileRef(uuid)');
+            }
+        }
+        // Also consider top-level fileRef fields if present
+        if (obj.fileRefWithQr) {
+            const u = extractUuid(String(obj.fileRefWithQr));
+            if (u) push(u, 'data.fileRefWithQr(uuid)');
+        }
+        if (obj.fileRef) {
+            const u = extractUuid(String(obj.fileRef));
+            if (u) push(u, 'data.fileRef(uuid)');
+        }
+        // Generic shallow scan for keys that look like sign application id
+        const likeKeys = ['signapplicationid','sign_application_id','signappId','signAppUuid','sign_application_uuid'];
+        Object.keys(obj).forEach(k => {
+            const v = obj[k];
+            if (typeof v === 'string' && v && likeKeys.includes(String(k).toLowerCase())) {
+                push(v, `data['${k}']`);
+            }
+        });
+        if (candidates.length) {
+            return candidates[0].id;
+        }
+        return null;
+    } catch (e) {
+        return null;
+    }
+}
+
 // Function to fetch signatory data
 async function fetchSignatoryData(signatoryId) {
     try {
-        const url = getDocSignApiUrl(window.DOCSIGN_CONFIG.SIGNATORY_ENDPOINT + signatoryId);
-        console.log('Fetching signatory data from:', url);
-        
+        const url = getDocSignApiUrl(_cfg().SIGNATORY_ENDPOINT + signatoryId);
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
-            timeout: window.DOCSIGN_CONFIG.REQUEST_TIMEOUT
+            timeout: _cfg().REQUEST_TIMEOUT
         });
 
         if (!response.ok) {
@@ -69,7 +227,6 @@ async function fetchSignatoryData(signatoryId) {
         }
 
         const data = await response.json();
-        console.log('Signatory data received:', data);
         return data;
     } catch (error) {
         console.error('Error fetching signatory data:', error);
@@ -77,6 +234,7 @@ async function fetchSignatoryData(signatoryId) {
     }
 }
 
+//
 // Function to format date
 function formatDate(dateString) {
     if (!dateString) return 'Не указано';
@@ -106,7 +264,7 @@ const translations = {
         notSpecified: 'Не указано',
         phone: 'Телефон',
         signedAt: 'Подписано',
-        signButton: 'Подписать документ',
+        signButton: 'Подписать',
         signers: 'Подписанты',
         documentToSign: 'Документ для подписи',
         created: 'Создан',
@@ -173,7 +331,13 @@ function switchLanguage(lang) {
         btn.classList.toggle('active', btn.dataset.lang === lang);
     });
     // Re-render the page with new language
-    initializeDocumentSigning();
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeDocumentSigning);
+        } else {
+            initializeDocumentSigning();
+        }
+    }
 }
 
 // Function to get signer type and info
@@ -209,6 +373,120 @@ function getSignStateClass(signState) {
     return classMap[signState] || 'pending';
 }
 
+// Simple IndexedDB helpers for caching PDF blobs
+function openPdfDb(callback) {
+    const dbName = 'pdfCache';
+    const storeName = 'pdfs';
+    const idb = (typeof indexedDB !== 'undefined') ? indexedDB
+        : (typeof window !== 'undefined' && window.indexedDB) ? window.indexedDB
+        : (typeof globalThis !== 'undefined' && globalThis.indexedDB) ? globalThis.indexedDB
+        : null;
+    if (!idb) { callback(null); return; }
+    const request = idb.open(dbName, 1);
+    request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName);
+        }
+    };
+    request.onsuccess = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.close();
+            try { idb.deleteDatabase(dbName); } catch (e) { /* ignore */ }
+            setTimeout(() => openPdfDb(callback), 50);
+            return;
+        }
+        callback(db);
+    };
+    request.onerror = function() { callback(null); };
+}
+
+function savePdfToCache(blob, cacheKey) {
+    openPdfDb(function(db) {
+        if (!db) return;
+        const tx = db.transaction('pdfs', 'readwrite');
+        const store = tx.objectStore('pdfs');
+        store.put(blob, cacheKey);
+    });
+}
+
+function getCachedPdfUrl(cacheKey, callback) {
+    openPdfDb(function(db) {
+        if (!db) return callback(null);
+        const tx = db.transaction('pdfs', 'readonly');
+        const store = tx.objectStore('pdfs');
+        const getReq = store.get(cacheKey);
+        getReq.onsuccess = function(e) {
+            const blob = e.target.result;
+            if (blob) {
+                callback(URL.createObjectURL(blob));
+            } else {
+                callback(null);
+            }
+        };
+        getReq.onerror = function() { callback(null); };
+    });
+}
+
+function loadAndDisplayPdf(pdfUrl, fileName) {
+    const objectEl = document.getElementById('pdfObject');
+    const iframeEl = document.getElementById('pdfFrame');
+    const downloadLink = document.getElementById('downloadPdfLink');
+    const newWindowLink = document.getElementById('openInNewWindowLink');
+
+    // Set initial fallback links to direct URL
+    if (newWindowLink) newWindowLink.href = pdfUrl;
+    if (downloadLink) {
+        downloadLink.href = pdfUrl;
+        downloadLink.setAttribute('download', fileName || 'document.pdf');
+    }
+
+    getCachedPdfUrl(pdfUrl, function(cachedUrl) {
+        const setViewerSrc = (url) => {
+            if (objectEl) objectEl.setAttribute('data', url);
+            if (iframeEl) iframeEl.setAttribute('src', url);
+        };
+
+        if (cachedUrl) {
+            setViewerSrc(cachedUrl);
+            if (downloadLink) downloadLink.href = cachedUrl;
+            if (newWindowLink) newWindowLink.href = cachedUrl;
+            return;
+        }
+
+        // Fetch the PDF as Blob
+        fetch(pdfUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+
+        })
+            .then(function(response) {
+                if (!response.ok) throw new Error('PDF fetch error: ' + response.status);
+                return response.blob();
+            })
+            .then(function(blob) {
+                const blobUrl = URL.createObjectURL(blob);
+                savePdfToCache(blob, pdfUrl);
+                setViewerSrc(blobUrl);
+                if (downloadLink) {
+                    downloadLink.href = blobUrl;
+                    downloadLink.setAttribute('download', fileName || 'document.pdf');
+                }
+                if (newWindowLink) {
+                    newWindowLink.href = blobUrl;
+                }
+            })
+            .catch(function(err) {
+                console.warn('[DocSign] PDF fetch failed, falling back to direct URL:', err);
+                // As a last resort, try to show direct URL (may download depending on headers)
+                setViewerSrc(pdfUrl);
+            });
+    });
+}
+
 // Function to render the document signing page
 function renderDocumentSigningPage(data) {
     const container = document.getElementById('documentContainer');
@@ -222,8 +500,8 @@ function renderDocumentSigningPage(data) {
     const currentSigner = data.signers.find(signer => signer.id === signatoryId);
     const isCurrentUserSigning = currentSigner !== undefined;
     
-    // Get file info
-    const fileInfo = data.signApplicationFile;
+    // Get file info (defensive in case backend omits it)
+    const fileInfo = (data && data.signApplicationFile) || {};
     
     // Sort signers - main signer first, then others
     const sortedSigners = [...data.signers].sort((a, b) => {
@@ -257,13 +535,6 @@ function renderDocumentSigningPage(data) {
                     <div class="signer-phone">${t('phone')}: ${signer.phone || t('notSpecified')}</div>
                     ${signer.signedTime ? `<div class="signed-time">${t('signedAt')}: ${formatDate(signer.signedTime)}</div>` : ''}
                 </div>
-                ${isCurrentSigner && signer.signState === 'PENDING' ? `
-                    <div class="sign-button-container">
-                        <button onclick="initiateSigning('${signatoryId}')" class="sign-button">
-                            ${t('signButton')}
-                        </button>
-                    </div>
-                ` : ''}
             </div>
         `;
     });
@@ -273,18 +544,24 @@ function renderDocumentSigningPage(data) {
         </div>
         
         <div class="document-info">
+            ${isCurrentUserSigning && currentSigner.signState === 'PENDING' ? `
+                <div class="sign-button-container">
+                    <button class="sign-button" onclick="initiateSigning('${currentSigner.id}')">${t('signButton')}</button>
+                </div>
+            ` : ''}
             <h2>${t('documentToSign')}</h2>
             <div class="file-details">
                 <div class="file-name">${fileInfo.fileName || t('notSpecified')}</div>
                 <div class="file-date">${t('created')}: ${formatDate(data.createdDate)}</div>
             </div>
             <div class="pdf-viewer">
-                <object data="${fileInfo.fileRefWithQr}" type="application/pdf" width="100%" height="600">
-                    <p>${t('downloadDoc')} <a href="${fileInfo.fileRefWithQr}" target="_blank">${t('downloadDoc')}</a></p>
-                </object>
-                <div class="pdf-fallback">
-                    <a href="${fileInfo.fileRefWithQr}" target="_blank" class="download-link">${t('openInNewWindow')}</a>
-                </div>
+                <object id="pdfObject" type="application/pdf" width="100%" height="600"></object>
+            </div>
+            <div class="pdf-fallback">
+                <a id="openInNewWindowLink" class="download-link" target="_blank" rel="noopener">${t('openInNewWindow')}</a>
+            </div>
+            <div class="pdf-fallback">
+                <a id="downloadPdfLink" class="download-link">${t('downloadDoc')}</a>
             </div>
         </div>
         
@@ -312,6 +589,63 @@ function renderDocumentSigningPage(data) {
     `;
     
     container.innerHTML = html;
+
+    // Prefer signApplicationId from URL query; then from payload; fall back to direct fileRef URLs only if needed
+    const signAppIdFromQuery = getSignApplicationIdFromQuery();
+    const signAppIdFromData = extractSignApplicationIdFromData(data) || extractSignApplicationIdFromData(fileInfo);
+
+    const signAppId = signAppIdFromQuery || signAppIdFromData;
+
+    if (signAppId) {
+        const apiPdfUrl = resolveDocSignUrl(getFilesApiPdfUrl(signAppId));
+        if (typeof window !== 'undefined') {
+            window.DEBUG_DocSign = window.DEBUG_DocSign || {};
+            window.DEBUG_DocSign.state = { signAppIdFromQuery, signAppIdFromData, chosenSignAppId: signAppId, apiPdfUrl };
+            window.DEBUG_DocSign.loadPdfFor = function(id) {
+                const u = resolveDocSignUrl(getFilesApiPdfUrl(id));
+                loadAndDisplayPdf(u, fileInfo && fileInfo.fileName);
+            };
+        }
+        loadAndDisplayPdf(apiPdfUrl, fileInfo && fileInfo.fileName);
+    } else {
+        const rawPdfUrl = (fileInfo && (fileInfo.fileRefWithQr || fileInfo.fileRef)) || null;
+        if (rawPdfUrl) {
+            const uuidFromRaw = extractUuid(String(rawPdfUrl));
+            if (uuidFromRaw) {
+                const inlineUrl = resolveDocSignUrl(getFilesApiPdfUrl(uuidFromRaw));
+                if (typeof window !== 'undefined') {
+                    window.DEBUG_DocSign = window.DEBUG_DocSign || {};
+                    window.DEBUG_DocSign.state = { signAppIdFromQuery, signAppIdFromData, chosenSignAppId: uuidFromRaw, derivedFrom: 'fileRef', rawPdfUrl, apiPdfUrl: inlineUrl };
+                    window.DEBUG_DocSign.loadPdfFor = function(id) {
+                        const u = resolveDocSignUrl(getFilesApiPdfUrl(id));
+                        loadAndDisplayPdf(u, fileInfo && fileInfo.fileName);
+                    };
+                }
+                loadAndDisplayPdf(inlineUrl, fileInfo && fileInfo.fileName);
+            } else {
+                const absPdfUrl = resolveDocSignUrl(rawPdfUrl);
+                if (typeof window !== 'undefined') {
+                    window.DEBUG_DocSign = window.DEBUG_DocSign || {};
+                    window.DEBUG_DocSign.state = { signAppIdFromQuery, signAppIdFromData, chosenSignAppId: null, rawPdfUrl, absPdfUrl };
+                    window.DEBUG_DocSign.loadPdfFor = function(id) {
+                        const u = resolveDocSignUrl(getFilesApiPdfUrl(id));
+                        loadAndDisplayPdf(u, fileInfo && fileInfo.fileName);
+                    };
+                }
+                loadAndDisplayPdf(absPdfUrl, fileInfo && fileInfo.fileName);
+            }
+        } else {
+            console.warn('[DocSign] No PDF URL or signApplicationId available to load PDF');
+            if (typeof window !== 'undefined') {
+                window.DEBUG_DocSign = window.DEBUG_DocSign || {};
+                window.DEBUG_DocSign.state = { signAppIdFromQuery, signAppIdFromData, chosenSignAppId: null };
+                window.DEBUG_DocSign.loadPdfFor = function(id) {
+                    const u = resolveDocSignUrl(getFilesApiPdfUrl(id));
+                    loadAndDisplayPdf(u, fileInfo && fileInfo.fileName);
+                };
+            }
+        }
+    }
 }
 
 // Function to show error
@@ -348,15 +682,14 @@ async function initiateSigning(signatoryId) {
         }
         
         // Call the signing endpoint
-        const url = getDocSignApiUrl(window.DOCSIGN_CONFIG.SIGNING_ENDPOINT + signatoryId + '/process');
-        console.log('Initiating signing process:', url);
-        
+        const url = getDocSignApiUrl(_cfg().SIGNING_ENDPOINT + signatoryId + '/process');
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            timeout: window.DOCSIGN_CONFIG.REQUEST_TIMEOUT
+            timeout: _cfg().REQUEST_TIMEOUT
         });
 
         if (!response.ok) {
@@ -364,8 +697,7 @@ async function initiateSigning(signatoryId) {
         }
 
         const data = await response.json();
-        console.log('Signing response received:', data);
-        
+
         // Redirect to the sign link
         if (data.signLink) {
             window.location.href = data.signLink;
@@ -402,15 +734,45 @@ function initializeLanguageButtons() {
     }
 }
 
+
 // Main initialization function
+function updateEndpointInfo(signatoryId) {
+    try {
+        const el = document.getElementById('endpointInfo');
+        if (!el) return;
+        const base = getDocSignApiBaseUrl();
+        const signatoryFull = getDocSignApiUrl(_cfg().SIGNATORY_ENDPOINT + (signatoryId || '...'));
+        const signingFull = getDocSignApiUrl(_cfg().SIGNING_ENDPOINT + (signatoryId || '...') + '/process');
+        el.textContent = `Endpoint: ${signatoryFull} | Signing: ${signingFull}`;
+    } catch (_) { /* silent */ }
+}
+
 async function initializeDocumentSigning() {
     try {
         showLoading();
+
+        // Early PDF load if signApplicationId is provided via query params
+        const signAppIdFromQuery = getSignApplicationIdFromQuery();
+        if (signAppIdFromQuery) {
+            const apiPdfUrl = resolveDocSignUrl(getFilesApiPdfUrl(signAppIdFromQuery));
+            if (typeof window !== 'undefined') {
+                window.DEBUG_DocSign = window.DEBUG_DocSign || {};
+                window.DEBUG_DocSign.earlyPdf = { signApplicationId: signAppIdFromQuery, url: apiPdfUrl, at: new Date().toISOString() };
+                window.DEBUG_DocSign.loadPdfFor = function(id) {
+                    const u = resolveDocSignUrl(getFilesApiPdfUrl(id));
+                    loadAndDisplayPdf(u);
+                };
+            }
+            // This will fetch the PDF and log the Blob in console; viewer will be set once available or fallback silently
+            loadAndDisplayPdf(apiPdfUrl);
+        }
         
         let signatoryId = getSignatoryIdFromPath();
         if (!signatoryId) {
             signatoryId = "0198990b-c489-70b5-bba0-4bf6058bb068";
         }
+
+        updateEndpointInfo(signatoryId);
         
         const data = await fetchSignatoryData(signatoryId);
         renderDocumentSigningPage(data);
