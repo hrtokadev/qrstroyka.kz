@@ -53,6 +53,18 @@
         "src": "/sign/document/.*",
         "dest": "/sign/docsign.html"
       },
+      {
+        "src": "/cv/?$",
+        "dest": "/cv-pages/cv.html"
+      },
+      {
+        "src": "/cv/create/?$",
+        "dest": "/cv-pages/create-cv.html"
+      },
+      {
+        "src": "/cv/([^/]+)$",
+        "dest": "/index.html"
+      },
 
       {
         "handle": "filesystem"
