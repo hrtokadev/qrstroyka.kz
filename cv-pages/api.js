@@ -300,9 +300,13 @@ class CVApiService {
     async createCV(cvData) {
         const url = `${CMR_API_BASE_URL}/rest/api/v1/cv`;
 
+        const payload = {
+            requestBody: cvData
+        }
+
         return await this.makeRequest(url, {
             method: 'POST',
-            body: JSON.stringify(cvData)
+            body: JSON.stringify(payload)
         });
     }
 

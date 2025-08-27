@@ -2322,7 +2322,7 @@
                         </div>
                         <div class="form-group">
                             <label data-kk="Бітірген жылы" data-ru="Год окончания">Бітірген жылы</label>
-                            <input type="number" id="graduationYear_${index}" placeholder="2024" min="1950" max="2030">
+                            <input type="number" id="graduationYear_${index}" placeholder="2025" min="1950" max="2030">
                         </div>
                     </div>
                     <div class="form-row">
@@ -2383,11 +2383,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label data-kk="Басталған күні (MM/yyyy)" data-ru="Дата начала (MM/yyyy)">Басталған күні (MM/yyyy)</label>
-                            <input type="text" id="startDate_${index}" placeholder="01/2023" pattern="^(0[1-9]|1[0-2])/\\d{4}$" title="${currentLanguage === 'kk' ? 'MM/YYYY форматында енгізіңіз' : 'Введите в формате MM/YYYY'}">
+                            <input type="text" id="startDate_${index}" placeholder="01/2025" pattern="^(0[1-9]|1[0-2])/\\d{4}$" title="${currentLanguage === 'kk' ? 'MM/YYYY форматында енгізіңіз' : 'Введите в формате MM/YYYY'}">
                         </div>
                         <div class="form-group">
                             <label data-kk="Аяқталған күні (MM/yyyy)" data-ru="Дата окончания (MM/yyyy)">Аяқталған күні (MM/yyyy)</label>
-                            <input type="text" id="endDate_${index}" placeholder="12/2023" pattern="^(0[1-9]|1[0-2])/\\d{4}$" title="${currentLanguage === 'kk' ? 'MM/YYYY форматында енгізіңіз' : 'Введите в формате MM/YYYY'}">
+                            <input type="text" id="endDate_${index}" placeholder="12/2025" pattern="^(0[1-9]|1[0-2])/\\d{4}$" title="${currentLanguage === 'kk' ? 'MM/YYYY форматында енгізіңіз' : 'Введите в формате MM/YYYY'}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -2559,18 +2559,13 @@
 
             try {
                 const cvData = collectFormData();
-                
-                if(true) {
-                    console.log(JSON.stringify(cvData));
-                    return;
-                }
 
                 // Create CV
                 const cvId = await apiService.createCV(cvData);
                 console.log('CV created with ID:', cvId);
                 
                 // Publish CV
-                await apiService.publishCV(cvId);
+                await apiService.publishCV(cvId['uuid']);
                 console.log('CV published successfully');
 
                 showSuccessModal();
