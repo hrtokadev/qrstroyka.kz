@@ -391,11 +391,11 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
     const setViewerSrc = (url) => {
         console.log('[DocSign] Setting viewer src:', url);
         if (objectEl){
-            console.log('[DocSign] Setting viewer src:', url);
+            console.log('[DocSign] Setting viewer src object:', url);
             objectEl.setAttribute('data', url);
         }
         if (iframeEl){
-            console.log('[DocSign] Setting viewer src:', url);
+            console.log('[DocSign] Setting viewer src iframe:', url);
             iframeEl.setAttribute('src', url);
         }
     };
