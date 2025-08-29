@@ -389,8 +389,15 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
     }
 
     const setViewerSrc = (url) => {
-        if (objectEl) objectEl.setAttribute('data', url);
-        if (iframeEl) iframeEl.setAttribute('src', url);
+        console.log('[DocSign] Setting viewer src:', url);
+        if (objectEl){
+            console.log('[DocSign] Setting viewer src:', url);
+            objectEl.setAttribute('data', url);
+        }
+        if (iframeEl){
+            console.log('[DocSign] Setting viewer src:', url);
+            iframeEl.setAttribute('src', url);
+        }
     };
 
     // Always fetch the PDF fresh from the endpoint (no caching)
@@ -411,10 +418,12 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
             const blobUrl = URL.createObjectURL(blob);
             setViewerSrc(blobUrl);
             if (downloadLink) {
+                console.log('[DocSign] Setting download link:', blobUrl);
                 downloadLink.href = blobUrl;
                 downloadLink.setAttribute('download', fileName || 'document.pdf');
             }
             if (newWindowLink) {
+                console.log('[DocSign] Setting new window link:', blobUrl);
                 newWindowLink.href = blobUrl;
             }
 
