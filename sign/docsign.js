@@ -390,11 +390,20 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
 
     const setViewerSrc = (url) => {
         console.log('[DocSign] Setting viewer src:', url);
-        if (objectEl){
+        if (objectEl) {
             console.log('[DocSign] Setting viewer src object:', url);
             objectEl.setAttribute('data', url);
+
+            // Add an onload error handler to fall back to iframe
+            objectEl.onerror = function() {
+                console.log('[DocSign] Object tag failed, falling back to iframe');
+                if (iframeEl) {
+                    iframeEl.style.display = 'block';
+                    objectEl.style.display = 'none';
+                }
+            };
         }
-        if (iframeEl){
+        if (iframeEl) {
             console.log('[DocSign] Setting viewer src iframe:', url);
             iframeEl.setAttribute('src', url);
         }
@@ -504,6 +513,7 @@ function renderDocumentSigningPage(data) {
             </div>
             <div class="pdf-viewer">
                 <object id="pdfObject" type="application/pdf" width="100%" height="600"></object>
+                <iframe id="pdfFrame" src="" width="100%" height="600" frameborder="0" style ="display: none"></iframe>
             </div>
             <div class="pdf-fallback">
                 <a id="openInNewWindowLink" class="download-link" target="_blank" rel="noopener">${t('openInNewWindow')}</a>
