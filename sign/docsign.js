@@ -402,10 +402,12 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
         }
     })
         .then(function(response) {
+            console.log('[DocSign] PDF fetch response:', response);
             if (!response.ok) throw new Error('PDF fetch error: ' + response.status);
             return response.blob();
         })
         .then(function(blob) {
+            console.log('[DocSign] PDF fetched successfully, creating blob URL:', blob);
             const blobUrl = URL.createObjectURL(blob);
             setViewerSrc(blobUrl);
             if (downloadLink) {
@@ -418,7 +420,7 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
 
         })
         .catch(function(err) {
-            console.warn('[DocSign] PDF fetch failed, falling back to direct URL:', err);
+            console.log('[DocSign] PDF fetch failed, falling back to direct URL:', err);
             // As a last resort, try to show direct URL (may download depending on headers)
             setViewerSrc(pdfUrl);
         });
