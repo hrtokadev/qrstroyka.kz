@@ -388,26 +388,37 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
         downloadLink.setAttribute('download', fileName || 'document.pdf');
     }
 
-    const setViewerSrc = (url) => {
-        console.log('[DocSign] Setting viewer src:', url);
+    function setViewerSrc(url) {
         if (objectEl) {
-            console.log('[DocSign] Setting viewer src object:', url);
             objectEl.setAttribute('data', url);
 
-            // Add an onload error handler to fall back to iframe
+            // Если браузер не сможет отобразить object → включаем iframe
             objectEl.onerror = function() {
-                console.log('[DocSign] Object tag failed, falling back to iframe');
                 if (iframeEl) {
-                    iframeEl.style.display = 'block';
                     objectEl.style.display = 'none';
+                    iframeEl.style.display = 'block';
+                    iframeEl.setAttribute('src', url);
                 }
             };
+
+            // Таймаут-проверка (например, через 2 секунды)
+            setTimeout(() => {
+                // Если object пустой (нет содержимого), то fallback в iframe
+                if (objectEl.offsetHeight === 0 || objectEl.offsetWidth === 0) {
+                    if (iframeEl) {
+                        objectEl.style.display = 'none';
+                        iframeEl.style.display = 'block';
+                        iframeEl.setAttribute('src', url);
+                    }
+                }
+            }, 2000);
         }
+
         if (iframeEl) {
-            console.log('[DocSign] Setting viewer src iframe:', url);
             iframeEl.setAttribute('src', url);
         }
-    };
+    }
+
 
     // Always fetch the PDF fresh from the endpoint (no caching)
     fetch(pdfUrl, {
@@ -418,27 +429,22 @@ function loadAndDisplayPdf(pdfUrl, fileName) {
         }
     })
         .then(function(response) {
-            console.log('[DocSign] PDF fetch response:', response);
             if (!response.ok) throw new Error('PDF fetch error: ' + response.status);
             return response.blob();
         })
         .then(function(blob) {
-            console.log('[DocSign] PDF fetched successfully, creating blob URL:', blob);
             const blobUrl = URL.createObjectURL(blob);
             setViewerSrc(blobUrl);
             if (downloadLink) {
-                console.log('[DocSign] Setting download link:', blobUrl);
                 downloadLink.href = blobUrl;
                 downloadLink.setAttribute('download', fileName || 'document.pdf');
             }
             if (newWindowLink) {
-                console.log('[DocSign] Setting new window link:', blobUrl);
                 newWindowLink.href = blobUrl;
             }
 
         })
         .catch(function(err) {
-            console.log('[DocSign] PDF fetch failed, falling back to direct URL:', err);
             // As a last resort, try to show direct URL (may download depending on headers)
             setViewerSrc(pdfUrl);
         });
