@@ -340,22 +340,84 @@
             margin-right: 12px;
         }
 
-        .pdf-viewer {
+        .pdf-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .pdf-tab {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .pdf-tab:hover {
+            background: #f8f9fa;
+            color: #01875f;
+        }
+
+        .pdf-tab.active {
+            color: #01875f;
+            border-bottom-color: #01875f;
+            background: #f8f9fa;
+        }
+
+        .pdf-viewers {
+            position: relative;
+        }
+
+        .pdf-viewer-container {
+            display: none;
             margin-top: 1rem;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .pdf-viewer object {
+        .pdf-viewer-container.active {
+            display: block;
+        }
+
+        .pdf-viewer-container object,
+        .pdf-viewer-container iframe {
             border: none;
             width: 100%;
             min-height: 600px;
         }
 
-        .pdf-fallback {
-            margin-top: 1rem;
+        .pdf-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .pdf-error {
             text-align: center;
+            padding: 2rem;
+            background: #ffebee;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+        }
+
+        .pdf-error h3 {
+            color: #d32f2f;
+            margin-bottom: 1rem;
+        }
+
+        .pdf-error p {
+            color: #666;
+            margin-bottom: 1.5rem;
         }
 
         .download-link {

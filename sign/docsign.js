@@ -376,78 +376,128 @@ function getSignStateClass(signState) {
 // PDF caching functions removed - PDFs are now always fetched fresh from endpoints
 
 function loadAndDisplayPdf(pdfUrl, fileName) {
-    const objectEl = document.getElementById('pdfObject');
-    const iframeEl = document.getElementById('pdfFrame');
-    const downloadLink = document.getElementById('downloadPdfLink');
-    const newWindowLink = document.getElementById('openInNewWindowLink');
-
-    // Set initial fallback links to direct URL
-    if (newWindowLink) newWindowLink.href = pdfUrl;
-    if (downloadLink) {
-        downloadLink.href = pdfUrl;
-        downloadLink.setAttribute('download', fileName || 'document.pdf');
-    }
-
-    function setViewerSrc(url) {
-        if (objectEl) {
-            objectEl.setAttribute('data', url);
-
-            // Если браузер не сможет отобразить object → включаем iframe
-            objectEl.onerror = function() {
-                if (iframeEl) {
-                    objectEl.style.display = 'none';
-                    iframeEl.style.display = 'block';
-                    iframeEl.setAttribute('src', url);
-                }
-            };
-
-            // Таймаут-проверка (например, через 2 секунды)
-            setTimeout(() => {
-                // Если object пустой (нет содержимого), то fallback в iframe
-                if (objectEl.offsetHeight === 0 || objectEl.offsetWidth === 0) {
-                    if (iframeEl) {
-                        objectEl.style.display = 'none';
-                        iframeEl.style.display = 'block';
-                        iframeEl.setAttribute('src', url);
-                    }
-                }
-            }, 2000);
-        }
-
-        if (iframeEl) {
-            iframeEl.setAttribute('src', url);
-        }
-    }
-
-
     // Always fetch the PDF fresh from the endpoint (no caching)
     fetch(pdfUrl, {
         method: 'GET',
         headers: {
-            'Accept': 'application/pdf',
+            'Accept': 'application/json',
             'Cache-Control': 'no-cache, no-store, must-revalidate'
         }
     })
         .then(function(response) {
             if (!response.ok) throw new Error('PDF fetch error: ' + response.status);
-            return response.blob();
+            return response.json();
         })
-        .then(function(blob) {
-            const blobUrl = URL.createObjectURL(blob);
-            setViewerSrc(blobUrl);
-            if (downloadLink) {
-                downloadLink.href = blobUrl;
-                downloadLink.setAttribute('download', fileName || 'document.pdf');
+        .then(function(pdfArray) {
+            // Handle array of PDF objects with fileName and fileBytes properties
+            if (Array.isArray(pdfArray) && pdfArray.length > 0) {
+                // Transform the API response to extract fileBytes and fileName
+                const transformedPdfData = pdfArray.map(pdfObj => ({
+                    fileName: pdfObj.fileName || 'document.pdf',
+                    fileBytes: pdfObj.fileBytes
+                }));
+                loadAndDisplayMultiplePdfs(transformedPdfData);
+            } else {
+                throw new Error('No PDFs received or invalid format');
             }
-            if (newWindowLink) {
-                newWindowLink.href = blobUrl;
-            }
-
         })
         .catch(function(err) {
-            // As a last resort, try to show direct URL (may download depending on headers)
-            setViewerSrc(pdfUrl);
+            console.error('Error loading PDFs:', err);
+            showPdfError(err.message);
         });
+}
+
+function loadAndDisplayMultiplePdfs(pdfArray) {
+    const pdfContainer = document.getElementById('pdfContainer');
+    
+    if (!pdfContainer) {
+        console.error('PDF container not found');
+        return;
+    }
+
+    // Create tabs and viewers for multiple PDFs using original file names
+    let html = `
+        <div class="pdf-tabs">
+            ${pdfArray.map((pdfData, index) => `
+                <button class="pdf-tab ${index === 0 ? 'active' : ''}" onclick="switchPdfTab(${index})">
+                    ${pdfData.fileName || `Документ ${index + 1}`}
+                </button>
+            `).join('')}
+        </div>
+        <div class="pdf-viewers">
+            ${pdfArray.map((pdfData, index) => {
+                const blobUrl = createBlobFromBase64(pdfData.fileBytes);
+                const fileName = pdfData.fileName || `document_${index + 1}.pdf`;
+                return `
+                    <div class="pdf-viewer-container ${index === 0 ? 'active' : ''}" id="pdfViewer${index}">
+                        <object class="pdfObject" type="application/pdf" data="${blobUrl}" width="100%" height="600">
+                            <iframe class="pdfFrame" src="${blobUrl}" width="100%" height="600" frameborder="0"></iframe>
+                        </object>
+                        <div class="pdf-controls">
+                            <a href="${blobUrl}" target="_blank" rel="noopener" class="download-link">Открыть в новом окне</a>
+                            <a href="${blobUrl}" download="${fileName}" class="download-link">Скачать документ</a>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+    
+    pdfContainer.innerHTML = html;
+    
+    // Store PDF data globally for tab switching
+    window.pdfData = pdfArray.map((pdfData) => ({
+        blobUrl: createBlobFromBase64(pdfData.fileBytes),
+        fileName: pdfData.fileName || 'document.pdf'
+    }));
+}
+
+function createBlobFromBase64(base64String) {
+    try {
+        // Remove data URL prefix if present
+        const base64Data = base64String.replace(/^data:application\/pdf;base64,/, '');
+        
+        // Convert base64 to binary
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        return URL.createObjectURL(blob);
+    } catch (error) {
+        console.error('Error creating blob from base64:', error);
+        return '';
+    }
+}
+
+function switchPdfTab(index) {
+    // Update active tab
+    const tabs = document.querySelectorAll('.pdf-tab');
+    tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+    });
+    
+    // Update active viewer
+    const viewers = document.querySelectorAll('.pdf-viewer-container');
+    viewers.forEach((viewer, i) => {
+        viewer.classList.toggle('active', i === index);
+    });
+}
+
+function showPdfError(message) {
+    const pdfContainer = document.getElementById('pdfContainer');
+    if (pdfContainer) {
+        pdfContainer.innerHTML = `
+            <div class="pdf-error">
+                <h3>Ошибка загрузки документов</h3>
+                <p>${message}</p>
+                <button onclick="window.location.reload()" class="retry-button">Повторить</button>
+            </div>
+        `;
+    }
 }
 
 // Function to render the document signing page
@@ -517,15 +567,8 @@ function renderDocumentSigningPage(data) {
                 <div class="file-name">${fileInfo.fileName || t('notSpecified')}</div>
                 <div class="file-date">${t('created')}: ${formatDate(data.createdDate)}</div>
             </div>
-            <div class="pdf-viewer">
-                <object id="pdfObject" type="application/pdf" width="100%" height="600"></object>
-                <iframe id="pdfFrame" src="" width="100%" height="600" frameborder="0" style ="display: none"></iframe>
-            </div>
-            <div class="pdf-fallback">
-                <a id="openInNewWindowLink" class="download-link" target="_blank" rel="noopener">${t('openInNewWindow')}</a>
-            </div>
-            <div class="pdf-fallback">
-                <a id="downloadPdfLink" class="download-link">${t('downloadDoc')}</a>
+            <div id="pdfContainer">
+                <!-- Multiple PDF viewers will be loaded here -->
             </div>
         </div>
         
