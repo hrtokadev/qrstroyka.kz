@@ -1,67 +1,68 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "**/*",
-        "use": "@vercel/static"
-      }
-    ],
-    "rewrites": [
-      {
-        "source": "/order/(.*)",
-        "destination": "/order/order.html"
+  "version": 2,
+  "builds": [
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/.well-known/apple-app-site-association",
+      "headers": {
+        "Content-Type": "application/json"
       },
-      {
-        "source": "/resume/(.*)",
-        "destination": "/index.html"
+      "dest": "/.well-known/apple-app-site-association"
+    },
+    {
+      "src": "/.well-known/assetlinks.json",
+      "headers": {
+        "Content-Type": "application/json"
       },
-      {
-        "source": "/equipment/(.*)",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/company/(.*)",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/cv/(.*)",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/sign/callback",
-        "destination": "/sign/callback.html"
-      },
-      {
-        "source": "/sign/success",
-        "destination": "/sign/success.html"
-      },
-      {
-        "source": "/sign/error",
-        "destination": "/sign/error.html"
-      },
-      {
-        "source": "/sign/document/(.*)",
-        "destination": "/sign/docsign.html"
-      }
-    ],
-    "headers": [
-      {
-        "source": "/.well-known/apple-app-site-association",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ]
-      },
-      {
-        "source": "/.well-known/assetlinks.json",
-        "headers": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ]
-      }
-    ]
+      "dest": "/.well-known/assetlinks.json"
+    },
+    {
+      "src": "/order/order\\.(js|html)$",
+      "dest": "/order/$1.js"
+    },
+    {
+      "src": "/order/([^/]+)$",
+      "dest": "/order/order.html"
+    },
+    {
+      "src": "/resume/.*",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/equipment/.*",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/company/.*",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/sign/callback",
+      "dest": "/sign/callback.html"
+    },
+    {
+      "src": "/sign/success",
+      "dest": "/sign/success.html"
+    },
+    {
+      "src": "/sign/error",
+      "dest": "/sign/error.html"
+    },
+    {
+      "src": "/sign/document/.*",
+      "dest": "/sign/docsign.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 }
