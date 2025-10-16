@@ -30,16 +30,28 @@
       "dest": "/order/order.html"
     },
     {
-      "src": "/resume/.*",
-      "dest": "/index.html"
+      "src": "/resume/resume\\.(js|html)$",
+      "dest": "/resume/$1.js"
     },
     {
-      "src": "/equipment/.*",
-      "dest": "/index.html"
+      "src": "/resume/([^/]+)$",
+      "dest": "/resume/resume.html"
     },
     {
-      "src": "/company/.*",
-      "dest": "/index.html"
+      "src": "/equipment/equipment\\.(js|html)$",
+      "dest": "/equipment/$1.js"
+    },
+    {
+      "src": "/equipment/([^/]+)$",
+      "dest": "/equipment/equipment.html"
+    },
+    {
+      "src": "/company/company\\.(js|html)$",
+      "dest": "/company/$1.js"
+    },
+    {
+      "src": "/company/([^/]+)$",
+      "dest": "/company/company.html"
     },
     {
       "src": "/sign/callback",

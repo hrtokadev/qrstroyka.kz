@@ -1,30 +1,29 @@
 // API Configuration
-const DEFAULT_ORDER_CONFIG = {
-    // API Base URL - can be overridden by environment variables
+const DEFAULT_RESUME_CONFIG = {
+    // API Base URL - use test API by default; can be overridden later if needed
     API_BASE_URL: 'https://cmr.test.api.stroyka.kz',
     // API_BASE_URL: 'http://localhost:8080',
     // API_BASE_URL: 'https://cmr.test.api.stroyka.kz',
-    
     // Endpoints
-    ORDER_ENDPOINT: '/rest/api/v1/order/reg/',
-    
+    RESUME_ENDPOINT: '/rest/api/v1/cv/reg/',
+
     // Timeouts
     REQUEST_TIMEOUT: 30000, // 30 seconds
 };
 
-// Order API Service
-class OrderAPIService {
-    constructor(config = DEFAULT_ORDER_CONFIG) {
+// Resume API Service
+class ResumeAPIService {
+    constructor(config = DEFAULT_RESUME_CONFIG) {
         this.config = config;
     }
 
-    async getOrderByRegNumber(regNumber) {
-        const url = `${this.config.API_BASE_URL}${this.config.ORDER_ENDPOINT}${regNumber}`;
-        
+    async getResumeByRegNumber(regNumber) {
+        const url = `${this.config.API_BASE_URL}${this.config.RESUME_ENDPOINT}${regNumber}`;
+
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.config.REQUEST_TIMEOUT);
-            
+
             const response = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -33,21 +32,21 @@ class OrderAPIService {
                 },
                 signal: controller.signal
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error fetching order data:', error);
+            console.error('Error fetching resume data:', error);
             throw error;
         }
     }
 }
 
 // Initialize API service
-const orderAPI = new OrderAPIService();
+const resumeAPI = new ResumeAPIService();
