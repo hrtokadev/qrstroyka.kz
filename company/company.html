@@ -59,7 +59,7 @@
 
         h1 {
             font-size: clamp(1.8rem, 5vw, 2.5rem);
-фк            margin-bottom: 1rem;
+            margin-bottom: 1rem;
             font-weight: 600;
             line-height: 1.2;
         }
@@ -337,6 +337,9 @@
             justify-content: center;
             color: white;
             font-weight: 600;
+            flex-shrink: 0;
+            min-width: 40px;
+            min-height: 40px;
         }
 
         .user-details h4 {
@@ -527,7 +530,7 @@
     <div class="download-modal-content">
         <button class="download-modal-close" onclick="closeDownloadModal()">&times;</button>
         <div class="download-modal-title">
-            Чтобы посмотреть партнеров скачайте приложение!
+            Для полного просмотра компании скачайте приложение!
         </div>
         <div class="download-modal-buttons">
             <a href="https://apps.apple.com/us/app/stroyka-kz/id6742178994" target="_blank" class="download-modal-button app-store">
@@ -553,43 +556,164 @@
         const deepLinkContent = document.getElementById('deepLinkContent');
         const defaultContent = document.getElementById('defaultContent');
 
-        // Debug logging
         console.log('Current pathname:', path);
         console.log('Full URL:', window.location.href);
 
-        // Extract company ID from URL path
         const companyPattern = /^\/company\/([^\/]+)$/;
         const match = path.match(companyPattern);
-
         console.log('Regex match result:', match);
 
         if (match && match[1]) {
             const companyId = match[1];
             defaultContent.style.display = 'none';
             
-            // Show company access message
-            displayCompanyMessage();
+            // Show company data
+            displayCompanyMessage(companyId);
         } else {
             // Show default deep link content for other types
             deepLinkContent.style.display = 'none';
         }
     });
 
-    function displayCompanyMessage() {
+    async function displayCompanyMessage(companyId) {
         const deepLinkContent = document.getElementById('deepLinkContent');
         
+        // Show loading spinner
+        showLoading();
+        
+        try {
+            // Fetch company data from API
+            const companyData = await companyAPI.getCompanyById(companyId);
+            displayCompanyData(companyData);
+        } catch (error) {
+            console.error('Error fetching company:', error);
+            showError('Не удалось загрузить данные компании. Проверьте подключение к интернету.');
+        }
+    }
+
+    function showLoading() {
+        const deepLinkContent = document.getElementById('deepLinkContent');
         deepLinkContent.innerHTML = `
-            <div class="order-container">
-                <div class="deep-link-message" style="text-align: center; padding: 2rem 1rem; color: #1d1d1f; font-size: 1.2rem; font-weight: 500; line-height: 1.4;">
-                    Просмотр партнеров доступен только в приложении Stroyka kz!
-                </div>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Загружаем данные компании...</p>
             </div>
         `;
     }
 
-    function openInApp(companyId) {
-        const deepLinkUrl = `stroyka://company/${companyId || window.location.pathname.split('/').pop()}`;
-        window.location.href = deepLinkUrl;
+    function showError(message) {
+        const deepLinkContent = document.getElementById('deepLinkContent');
+        deepLinkContent.innerHTML = `
+            <div class="error-message">
+                ${message}
+            </div>
+            <div class="deep-link-container">
+                <div class="deep-link-message">
+                    Скачайте приложение для просмотра компании
+                </div>
+                <p style="color: #666; margin-bottom: 1.5rem;">
+                    Для полного доступа к партнерам скачайте мобильное приложение Stroyka.kz
+                </p>
+            </div>
+        `;
+    }
+
+    function displayCompanyData(company) {
+        const deepLinkContent = document.getElementById('deepLinkContent');
+        
+        // Get first letter for avatar
+        const companyInitial = company.companyName ? 
+            company.companyName[0].toUpperCase() : 
+            'К';
+        
+        deepLinkContent.innerHTML = `
+            <div class="order-container">
+                <!-- Company Header -->
+                <div class="order-header">
+                    <div class="order-amount" style="color: #1d1d1f; font-size: 1.3rem;">${company.companyName || 'Название компании'}</div>
+                </div>
+
+                <!-- Company Details -->
+                <div class="order-details">
+                    <div class="details-title">Информация о компании</div>
+                    
+                    ${company.oked ? `
+                    <div class="detail-row">
+                        <span class="detail-label">ОКЕД</span>
+                        <span class="detail-value">${company.oked}</span>
+                    </div>
+                    ` : `
+                    <div class="detail-row">
+                        <span class="detail-label">ОКЕД</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    `}
+                    
+                    ${company.businessDescription ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Описание бизнеса</span>
+                        <span class="detail-value">${company.businessDescription}</span>
+                    </div>
+                    ` : `
+                    <div class="detail-row">
+                        <span class="detail-label">Описание бизнеса</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    `}
+                    
+                    ${company.legalAddressKz ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Юридический адрес</span>
+                        <span class="detail-value">${company.legalAddressKz}</span>
+                    </div>
+                    ` : `
+                    <div class="detail-row">
+                        <span class="detail-label">Юридический адрес</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    `}
+                    
+                    ${company.workTypes && Array.isArray(company.workTypes) && company.workTypes.length > 0 ? `
+                    <div class="detail-row">
+                        <span class="detail-label">Виды работ</span>
+                        <span class="detail-value">${company.workTypes.map(wt => wt.name || wt).join(', ')}</span>
+                    </div>
+                    ` : `
+                    <div class="detail-row">
+                        <span class="detail-label">Виды работ</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    `}
+                    
+                    <!-- Additional hidden fields -->
+                    <div class="detail-row">
+                        <span class="detail-label">БИН</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Контактная информация</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Руководитель</span>
+                        <span class="detail-value"><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.95rem;">чтобы просмотреть информацию скачайте приложение</a></span>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="contact-info">
+                    <div class="user-info">
+                        <div class="user-avatar">${companyInitial}</div>
+                        <div class="user-details">
+                            <h4>Партнер Stroyka.kz</h4>
+                            <p><a href="#" onclick="showDownloadModal(); return false;" style="color: #007AFF; font-style: italic; text-decoration: underline; cursor: pointer; font-size: 0.8rem;">для связи скачайте приложение!</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     function showDownloadModal() {
